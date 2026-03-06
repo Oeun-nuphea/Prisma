@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as UserService from "../service/user.service";
+import { detectDeviceFromRequest } from "../utils/device-detector";
 
 const parseId = (raw: string | string[]): number =>
   parseInt(Array.isArray(raw) ? raw[0] : raw, 10);
@@ -56,9 +57,16 @@ export const deleteUser = async (req: Request, res: Response) => {
 export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    const user = await UserService.loginUser(email, password);
-    res.status(200).json(user);
+    const loginResult = await UserService.loginUser(email, password);
+    const device = detectDeviceFromRequest(req);
+
+    await UserService.saveLoginDevice(loginResult.user.id, {
+      browser: device.browser,
+      os: device.os,
+    });
+
+    res.status(200).json(loginResult);
   } catch (err: any) {
     res.status(err.status ?? 500).json({ message: err.message });
   }
-}
+};

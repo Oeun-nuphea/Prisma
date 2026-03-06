@@ -59,8 +59,20 @@ export const loginUser = async (email: string, password: string) => {
     name: user.name,
     email: user.email,
   });
-  return {user, token};
-}
+  return { user, token };
+};
+
+export const saveLoginDevice = (
+  userId: number,
+  device: { browser: string; os: string }
+) =>
+  prisma.userDevice.create({
+    data: {
+      userId,
+      broswer: device.browser || "Unknown",
+      os: device.os || "Unknown",
+    },
+  });
 
 export const softDeleteUser = (id: number) =>
   prisma.user.update({ where: { id }, data: { isDeleted: true } });
