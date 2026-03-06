@@ -1,31 +1,35 @@
-import express from "express";
-import {Application, Request, Response } from "express";
+import express, { Application, NextFunction, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 const app: Application = express();
+const PORT = 4000;
 
-const PORT = 4000
+const adapter = new PrismaBetterSqlite3({
+  url: "file:./prisma/dev.db",
+});
+const prisma = new PrismaClient({ adapter });
 
+app.use(express.json());
 
-
-app.get('/', (_req: Request, res: Response) => {
-  res.json({ message: 'Primsa Operactions' })
+app.get("/", (_req: Request, res: Response) => {
+  res.json({ message: "Prisma Operations" });
 });
 
-app.post('/create', (req: Request, res: Response) => {
-    const {name, email} = req.body;
+app.get("/users", async (_req: Request, res: Response) => {
+  const users = await prisma.user.findMany({
+    where: {
+      isDeleted: false,
+    },
+  });
+  res.json(users);
+});
 
-    const user = prisma.user.create({
-        data:{
-            name,
-            email
-        }
-    })
-})
+app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  const message = error instanceof Error ? error.message : "Internal server error";
+  res.status(500).json({ message });
+});
 
 app.listen(PORT, () => {
-  console.log(`Server is Fire at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
