@@ -28,3 +28,11 @@ export const createNote = async (userId: number, title: string, body: string) =>
     data: { userId, title, body },
   });
 };
+
+export const updateNote = async (id: number, data: { title?: string; body?: string }) => {
+  return prisma.note.update({ where: { id }, data });
+};
+
+export const softDeleteNote = async (id: number) => {
+  return prisma.note.update({ where: { id }, data: { isDeleted: true } });
+};
