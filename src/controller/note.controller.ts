@@ -16,7 +16,7 @@ export const createNote = async (req: Request, res: Response) => {
   }
 };
 
-export const getNoteByOneUser = async (req: Request, res: Response) => {
+export const getNotesByOneUser = async (req: Request, res: Response) => {
   try {
     const userId = parseId(req.params.userId);
     if (isNaN(userId)) return res.status(400).json({ message: "Invalid ID" });
