@@ -20,6 +20,7 @@ export const getNotesByOneUser = async (req: Request, res: Response) => {
   try {
     const userId = parseId(req.params.userId);
     if (isNaN(userId)) return res.status(400).json({ message: "Invalid ID" });
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const notes = await NoteService.getAllNoteOfUser(userId);
     res.status(200).json(notes);
