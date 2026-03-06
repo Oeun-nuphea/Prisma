@@ -10,6 +10,7 @@ model User {
   id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
+  password  String   
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -22,5 +23,6 @@ model Note {
   body      String
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
+  isDeleted Boolean  @default(false)
 
 }

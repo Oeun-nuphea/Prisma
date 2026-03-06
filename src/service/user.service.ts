@@ -12,15 +12,30 @@ export const getUserById = (id: number) =>
     select: { id: true, name: true, email: true },
   });
 
-export const createUser = async (name: string, email: string) => {
-  if (!name || !email)
+type CreateUserInput = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+export const createUser = async (data: CreateUserInput) => {
+  const { name, email, password } = data;
+
+  if (!name || !email) {
     throw { status: 400, message: "Email and Name are required" };
+  }
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing)
+  const existing = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existing) {
     throw { status: 409, message: "Email already exists" };
+  }
 
-  return prisma.user.create({ data: { name, email } });
+  return prisma.user.create({
+    data: { name, email, password },
+  });
 };
 
 export const updateUser = async (id: number, data: { name?: string; email?: string }) => {
