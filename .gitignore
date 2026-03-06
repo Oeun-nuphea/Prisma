@@ -3,3 +3,7 @@ node_modules
 .env
 
 /generated/prisma
+
+# Local SQLite files
+/dev.db
+/prisma/dev.db
