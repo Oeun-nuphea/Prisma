@@ -35,7 +35,7 @@ export const updateUser = async (req: Request, res: Response) => {
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
     const user = await UserService.updateUser(id, req.body);
-    res.json(user);
+    res.status(200).json(user);
   } catch (err: any) {
     res.status(err.status ?? 500).json({ message: err.message });
   }
@@ -47,8 +47,18 @@ export const deleteUser = async (req: Request, res: Response) => {
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
     const user = await UserService.softDeleteUser(id);
-    res.json(user);
+    res.status(200).json(user);
   } catch (err: any) {
     res.status(err.status ?? 500).json({ message: err.message });
   }
 };
+
+export const loginUser = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const user = await UserService.loginUser(email, password);
+    res.status(200).json(user);
+  } catch (err: any) {
+    res.status(err.status ?? 500).json({ message: err.message });
+  }
+}

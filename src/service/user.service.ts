@@ -1,4 +1,5 @@
 import { prisma } from "../config/db";
+import { signToken } from "../config/jwt";
 
 export const getAllUsers = () =>
   prisma.user.findMany({
@@ -47,6 +48,19 @@ export const updateUser = async (id: number, data: { name?: string; email?: stri
 
   return prisma.user.update({ where: { id }, data });
 };
+
+export const loginUser = async (email: string, password: string) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || user.password !== password)
+    throw { status: 401, message: "Invalid email or password" };
+
+  const token = signToken({
+    userId: String(user.id), // convert number to string
+    name: user.name,
+    email: user.email,
+  });
+  return {user, token};
+}
 
 export const softDeleteUser = (id: number) =>
   prisma.user.update({ where: { id }, data: { isDeleted: true } });
