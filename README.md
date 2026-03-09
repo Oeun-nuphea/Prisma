@@ -44,3 +44,4 @@ npx prisma generate
 ```bash
 npx prisma studio
 ```
+docker compose exec db psql -U note -d note_db
