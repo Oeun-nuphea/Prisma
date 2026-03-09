@@ -11,6 +11,6 @@ app.use("/users", user);
 app.use("/notes", note);
 
 
-app.get("/", (_req, res) => res.json({ message: "Prisma Operations" }));
+app.get("/", (_req, res) => res.json({ message: "Note is running" }));
 
 app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
