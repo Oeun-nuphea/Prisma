@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: note-api
+    container_name: note
     command: sh -c "npm run prisma:generate && npm run prisma:deploy && npm run dev"
     ports:
       - "4000:4000"
@@ -18,9 +20,12 @@ services:
     depends_on:
       - db
     restart: unless-stopped
+    networks:
+      - note_network
 
   db:
     image: postgres:16-alpine
+    container_name: db-postgres
     ports:
       - "5432:5432"
     environment:
@@ -30,6 +35,14 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      - note_network
 
 volumes:
   db_data:
+
+
+networks:
+  note_network:
+    name: note_network
+
