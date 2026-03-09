@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "npm run prisma:generate && npm run prisma:deploy && npm run dev"
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - DATABASE_URL=postgresql://note:mypassword@db:5432/note_db?schema=public
+      - JWT_TOKEN=123
+      - JWT_EXPIRES_IN=90d
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=note
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=note_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  db_data:

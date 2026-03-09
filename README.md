@@ -1,14 +1,37 @@
-# Express + Prisma (SQLite)
+# Express + Prisma (PostgreSQL)
 
-## Run project
+## Run with Docker Compose
+
+```bash
+docker compose up --build
+```
+
+App URL: `http://localhost:4000`
+
+## Run locally (without Docker)
+
+1. Start PostgreSQL (for example with Docker):
+
+```bash
+docker compose up -d db
+```
+
+2. Set your local `DATABASE_URL` in `.env` to use localhost:
+
+```env
+DATABASE_URL="postgresql://myuser:mypassword@localhost:5432/mydb?schema=public"
+```
+
+3. Run app and migrations:
 
 ```bash
 npm install
+npm run prisma:generate
 npm run prisma:migrate -- --name init
 npm run dev
 ```
 
-## Create new migration after schema changes
+## Create migration after schema changes
 
 ```bash
 npx prisma validate
@@ -21,8 +44,3 @@ npx prisma generate
 ```bash
 npx prisma studio
 ```
-
-## Notes
-
-- Prisma config uses SQLite at `file:./prisma/dev.db` via `prisma.config.ts`.
-- In Prisma 7, datasource URL belongs in `prisma.config.ts`, not `schema.prisma`.
