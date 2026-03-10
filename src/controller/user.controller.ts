@@ -6,11 +6,21 @@ import { CreateUserDto, UpdateUserDto, LoginUserDto } from "../dto/user.dto";
 const parseId = (raw: string | string[]): number =>
   parseInt(Array.isArray(raw) ? raw[0] : raw, 10);
 
+/**
+ * Get all users Admin 
+ * @param _req 
+ * @param res 
+ */
 export const getUsers = async (_req: Request, res: Response) => {
   const users = await UserService.getAllUsers();
   res.json(users);
 };
 
+/**
+ * Get user by ID Admin
+ * @param req 
+ * @param res 
+ */
 export const getUserById = async (req: Request, res: Response) => {
   const id = parseId(req.params.id);
   if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
@@ -20,6 +30,12 @@ export const getUserById = async (req: Request, res: Response) => {
   res.json(user);
 };
 
+
+/**
+ * These all below are for normal user
+ * @param req 
+ * @param res 
+ */
 export const createUser = async (req: Request, res: Response) => {
   try {
     const dto: CreateUserDto = req.body;

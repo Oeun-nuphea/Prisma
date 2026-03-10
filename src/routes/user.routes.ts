@@ -9,8 +9,17 @@ import {
 
 const router = Router();
 
+
+/**
+ * Admin Access
+ */
 router.get("/", UserController.getUsers);
 router.get("/:id", UserController.getUserById);
+
+
+/**
+ * Normal User Access
+ */
 router.post("/", validate(CreateUserSchema), UserController.createUser);
 router.patch("/:id", validate(UpdateUserSchema), UserController.updateUser);
 router.patch("/:id/delete", UserController.deleteUser);

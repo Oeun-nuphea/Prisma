@@ -4,6 +4,10 @@ import { CreateUserDto, UpdateUserDto, LoginUserDto } from "../dto/user.dto";
 import { toUserResponse, toLoginResponse } from "../utils/mapper";
 import bcrypt from "bcryptjs";
 
+/**
+ * Admin get all users
+ * @returns 
+ */
 export const getAllUsers = async () => {
   const users = await prisma.user.findMany({
     where: { isDeleted: false },
@@ -17,6 +21,11 @@ export const getUserById = async (id: number) => {
   return toUserResponse(user);
 };
 
+/**
+ * Normal user for all below
+ * @param data 
+ * @returns 
+ */
 export const createUser = async (data: CreateUserDto) => {
   const { name, email, password } = data;
 
