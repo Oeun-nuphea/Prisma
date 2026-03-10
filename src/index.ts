@@ -7,10 +7,19 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
 const app: Application = express();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100,               // max 100 requests per window
+  message: { message: 'Too many requests, please try again later.' },
+});
+
+app.use(limiter);
 
 const PORT = process.env.PORT || 4000;
 app.use(cors());
