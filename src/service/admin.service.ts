@@ -1,7 +1,7 @@
 import { prisma } from "../config/db";
 import { signToken } from "../config/jwt";
 import { LoginAdminDto } from "../dto/admin.dto";
-import { toAdminLoginResponse } from "../utils/mapper";
+import { toAdminLoginResponse, toUserResponseWithStatus } from "../utils/mapper";
 import bcrypt from "bcryptjs";
 import { toUserResponse } from "../utils/mapper";
 
@@ -96,5 +96,5 @@ export const setUserActive = async (id: number, isActive: boolean) => {
     where: { id },
     data: { isActive },
   });
-  return toUserResponse(updated);
+  return toUserResponseWithStatus(updated);
 };

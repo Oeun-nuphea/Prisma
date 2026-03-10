@@ -1,5 +1,9 @@
 import { User, Note, Admin } from "@prisma/client";
-import { UserResponseDto, LoginResponseDto } from "../dto/user.dto";
+import {
+  UserResponseDto,
+  LoginResponseDto,
+  UserResponseWithStatusDto,
+} from "../dto/user.dto";
 import { AdminResponseDto, LoginAdminResponseDto } from "../dto/admin.dto";
 import { NoteResponseDto } from "../dto/note.dto";
 
@@ -23,6 +27,18 @@ export const toLoginResponse = (
 ): LoginResponseDto => ({
   token,
   user: toUserResponse(user),
+});
+
+/**
+ * Includes isActive status — used for admin activate/deactivate responses.
+ */
+export const toUserResponseWithStatus = (
+  user: User,
+): UserResponseWithStatusDto => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  isActive: user.isActive,
 });
 
 /**

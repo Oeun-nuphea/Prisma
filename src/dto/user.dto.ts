@@ -28,3 +28,10 @@ export interface LoginResponseDto {
   token: string;
   user: UserResponseDto;
 }
+
+export interface UserResponseWithStatusDto {
+  id: number;
+  name: string;
+  email: string;
+  isActive: boolean;
+}
