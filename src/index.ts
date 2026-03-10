@@ -5,6 +5,8 @@ import admin from "./routes/admin.routes";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
 
 dotenv.config();
 
@@ -12,9 +14,35 @@ const app: Application = express();
 
 const PORT = process.env.PORT || 4000;
 app.use(cors());
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false })); // disable CSP so Swagger UI loads
+
+// ─── Swagger Setup ────────────────────────────────────────────────────────────
+const swaggerSpec = swaggerJsdoc({
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Note API",
+      version: "1.0.0",
+      description: "REST API for Note app with User and Admin management",
+    },
+    servers: [{ url: `http://localhost:${PORT}` }],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+  },
+  apis: ["./src/routes/*.ts"],
+});
 
 app.use(express.json());
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/users", user);
 app.use("/notes", note);
 app.use("/admin", admin);
@@ -22,5 +50,7 @@ app.use("/admin", admin);
 app.get("/", (_req, res) => res.json({ message: "Note is running" }));
 
 app.listen(Number(PORT), "0.0.0.0", () =>
-  console.log(`Server running at http://localhost:${PORT}`),
+  console.log(
+    `Server running at http://localhost:${PORT}\nSwagger docs: http://localhost:${PORT}/docs`,
+  ),
 );
