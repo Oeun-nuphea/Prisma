@@ -3,12 +3,15 @@ import user from "./routes/user.routes";
 import note from "./routes/note.routes";
 import cors from "cors";
 import helmet from "helmet";
+import dotenv from "dotenv";
 
+dotenv.config();
 
 
 const app: Application = express();
-const PORT = 4000;
 
+
+const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(helmet());
 
@@ -16,9 +19,8 @@ app.use(express.json());
 app.use("/users", user);
 app.use("/notes", note);
 
-
 app.get("/", (_req, res) => res.json({ message: "Note is running" }));
 
-app.listen(PORT, "0.0.0.0", () => 
-  console.log(`Server running at http://0.0.0.0:${PORT}`)
+app.listen(Number(PORT), "0.0.0.0", () => 
+  console.log(`Server running at http://localhost:${PORT}`)
 );
