@@ -30,19 +30,6 @@ export const createUser = async (data: CreateUserDto) => {
   return toUserResponse(user);
 };
 
-export const updateUser = async (id: number, data: UpdateUserDto) => {
-  if (data.email) {
-    const existing = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
-    if (existing && existing.id !== id)
-      throw { status: 409, message: "Email already exists" };
-  }
-
-  const user = await prisma.user.update({ where: { id }, data });
-  return toUserResponse(user);
-};
-
 export const loginUser = async ({ email, password }: LoginUserDto) => {
   const user = await prisma.user.findUnique({ where: { email } });
 

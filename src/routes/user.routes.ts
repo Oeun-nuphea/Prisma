@@ -49,36 +49,6 @@ router.post("/", validate(CreateUserSchema), UserController.createUser);
 
 /**
  * @swagger
- * /users/{id}:
- *   patch:
- *     summary: Update user by ID
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *     responses:
- *       200:
- *         description: User updated
- *       409:
- *         description: Email already exists
- */
-router.patch("/:id", validate(UpdateUserSchema), UserController.updateUser);
-
-/**
- * @swagger
  * /users/{id}/delete:
  *   patch:
  *     summary: Soft delete a user

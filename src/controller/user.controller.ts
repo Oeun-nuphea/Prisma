@@ -24,19 +24,6 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export const updateUser = async (req: Request, res: Response) => {
-  try {
-    const id = parseId(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-
-    const dto: UpdateUserDto = req.body;
-    const user = await UserService.updateUser(id, dto);
-    res.status(200).json(user);
-  } catch (err: any) {
-    res.status(err.status ?? 500).json({ message: err.message });
-  }
-};
-
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const id = parseId(req.params.id);
