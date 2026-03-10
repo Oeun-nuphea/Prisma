@@ -127,9 +127,9 @@ router.get("/users/:id", adminHandler, AdminController.getUserById);
 
 /**
  * @swagger
- * /admin/users/{id}/deactivate:
+ * /admin/users/{id}/active/toggle:
  *   patch:
- *     summary: Deactivate a user account (admin only)
+ *     summary: Toggle a user's active status (admin only)
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -139,9 +139,12 @@ router.get("/users/:id", adminHandler, AdminController.getUserById);
  *         required: true
  *         schema:
  *           type: integer
+ *         example: 1
  *     responses:
  *       200:
- *         description: User deactivated
+ *         description: User active status toggled successfully
+ *       400:
+ *         description: Invalid ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -150,35 +153,9 @@ router.get("/users/:id", adminHandler, AdminController.getUserById);
  *         description: User not found
  */
 router.patch(
-  "/users/:id/deactivate",
+  "/users/:id/active/toggle",
   adminHandler,
-  AdminController.deactivateUser,
+  AdminController.toggleUserActive,
 );
-
-/**
- * @swagger
- * /admin/users/{id}/activate:
- *   patch:
- *     summary: Activate a user account (admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: User activated
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden — not an admin
- *       404:
- *         description: User not found
- */
-router.patch("/users/:id/activate", adminHandler, AdminController.activateUser);
 
 export default router;

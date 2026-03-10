@@ -70,40 +70,22 @@ export const getUserById = async (req: Request, res: Response) => {
 };
 
 /**
- * PATCH /admin/users/:id/deactivate
- * Deactivate a user account (admin only)
+ * PATCH /admin/users/:id/active
+ * Activate or deactivate a user account (admin only)
  */
-export const deactivateUser = async (req: Request, res: Response) => {
+export const toggleUserActive = async (req: Request, res: Response) => {
   try {
     const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-    const user = await AdminService.setUserActive(id, false);
+    const user = await AdminService.toggleUserActive(id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res
-      .status(200)
-      .json({ message: "User account has been deactivated.", user });
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+    const statusMessage = user.isActive
+      ? "User account has been activated."
+      : "User account has been deactivated.";
 
-/**
- * PATCH /admin/users/:id/activate
- * Activate a user account (admin only)
- */
-export const activateUser = async (req: Request, res: Response) => {
-  try {
-    const id = parseInt(String(req.params.id), 10);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-
-    const user = await AdminService.setUserActive(id, true);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    res.status(200).json({ message: "User account has been activated.", user });
+    res.status(200).json({ message: statusMessage, user });
   } catch (err: any) {
     res
       .status(err.status ?? 500)
