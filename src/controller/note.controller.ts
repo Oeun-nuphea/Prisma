@@ -39,53 +39,46 @@ export const getNotesByOneUser = async (req: Request, res: Response) => {
 
 export const getNoteById = async (req: Request, res: Response) => {
   try {
-    const userId =
-      (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
+    const userId = (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    const note = await NoteService.getNoteById(id);
+    const note = await NoteService.getNoteById(id, userId); // ✅ pass userId
     if (!note) return res.status(404).json({ message: "Note not found" });
     res.status(200).json(note);
   } catch (err: any) {
-    res.status(err.status ?? 500).json({
-      message: err.message ?? "Internal Server Error",
-    });
+    res.status(err.status ?? 500).json({ message: err.message ?? "Internal Server Error" });
   }
 };
 
 export const updateNote = async (req: Request, res: Response) => {
   try {
-    const userId =
-      (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
+    const userId = (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const dto: UpdateNoteDto = { title: req.body.title, body: req.body.body };
-    const note = await NoteService.updateNote(id, dto);
+    const note = await NoteService.updateNote(id, userId, dto); // ✅ pass userId
+    if (!note) return res.status(404).json({ message: "Note not found" });
     res.status(200).json(note);
   } catch (err: any) {
-    res.status(err.status ?? 500).json({
-      message: err.message ?? "Internal Server Error",
-    });
+    res.status(err.status ?? 500).json({ message: err.message ?? "Internal Server Error" });
   }
 };
 
 export const deleteNote = async (req: Request, res: Response) => {
   try {
-    const userId =
-      (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
+    const userId = (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    await NoteService.softDeleteNote(id);
+    const note = await NoteService.softDeleteNote(id, userId); 
+    if (!note) return res.status(404).json({ message: "Note not found" });
     res.status(200).json({ message: "Note deleted" });
   } catch (err: any) {
-    res.status(err.status ?? 500).json({
-      message: err.message ?? "Internal Server Error",
-    });
+    res.status(err.status ?? 500).json({ message: err.message ?? "Internal Server Error" });
   }
 };

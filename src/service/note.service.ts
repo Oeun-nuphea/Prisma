@@ -3,14 +3,8 @@ import { CreateNoteDto, UpdateNoteDto } from "../dto/note.dto";
 import { toNoteResponse, toNoteListResponse } from "../utils/mapper";
 
 export const getAllNoteOfUser = async (userId: number) => {
-  const notes = await prisma.note.findMany({ where: { userId } });
+  const notes = await prisma.note.findMany({ where: { userId, isDeleted: false } });
   return toNoteListResponse(notes);
-};
-
-export const getNoteById = async (id: number) => {
-  const note = await prisma.note.findUnique({ where: { id } });
-  if (!note) return null;
-  return toNoteResponse(note);
 };
 
 export const createNote = async (userId: number, data: CreateNoteDto) => {
@@ -19,11 +13,24 @@ export const createNote = async (userId: number, data: CreateNoteDto) => {
   return toNoteResponse(note);
 };
 
-export const updateNote = async (id: number, data: UpdateNoteDto) => {
-  const note = await prisma.note.update({ where: { id }, data });
+export const getNoteById = async (id: number, userId: number) => {
+  const note = await prisma.note.findUnique({ where: { id } });
+  if (!note || note.isDeleted || note.userId !== userId) return null;
   return toNoteResponse(note);
 };
 
-export const softDeleteNote = async (id: number) => {
-  return prisma.note.update({ where: { id }, data: { isDeleted: true } });
+export const updateNote = async (id: number, userId: number, data: UpdateNoteDto) => {
+  const note = await prisma.note.findUnique({ where: { id } });
+  if (!note || note.isDeleted || note.userId !== userId) return null;
+
+  const updated = await prisma.note.update({ where: { id }, data });
+  return toNoteResponse(updated);
+};
+
+export const softDeleteNote = async (id: number, userId: number) => {
+  const note = await prisma.note.findUnique({ where: { id } });
+  if (!note || note.isDeleted || note.userId !== userId) return null;
+
+  const deleted = await prisma.note.update({ where: { id }, data: { isDeleted: true } });
+  return toNoteResponse(deleted);
 };
