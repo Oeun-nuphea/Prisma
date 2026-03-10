@@ -45,3 +45,7 @@ npx prisma generate
 npx prisma studio
 ```
 docker compose exec db psql -U note -d note_db
+
+
+<!-- npm run prisma:migrate -->
+for new migration
