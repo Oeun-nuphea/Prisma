@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import user from "./routes/user.routes";
 import note from "./routes/note.routes";
 import cors from "cors";
+import helmet from "helmet";
 
 
 
@@ -9,6 +10,7 @@ const app: Application = express();
 const PORT = 4000;
 
 app.use(cors());
+app.use(helmet());
 
 app.use(express.json());
 app.use("/users", user);
