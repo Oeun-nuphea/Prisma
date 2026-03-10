@@ -29,7 +29,8 @@ export const getUsers = async (req: Request, res: Response) => {
       100,
       Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10),
     );
-    const result = await AdminService.getAllUsers(page, limit);
+    const includeDeleted = req.query.includeDeleted === "true";
+    const result = await AdminService.getAllUsers(page, limit, includeDeleted);
     res.status(200).json(result);
   } catch (err: any) {
     res

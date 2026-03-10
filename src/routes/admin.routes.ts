@@ -67,6 +67,12 @@ router.post("/login", validate(LoginAdminSchema), AdminController.loginAdmin);
  *           type: integer
  *           default: 10
  *         description: Items per page (max 100)
+ *       - in: query
+ *         name: includeDeleted
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Include soft-deleted users (true/false)
  *     responses:
  *       200:
  *         description: Paginated list of users

@@ -45,9 +45,13 @@ export const loginAdmin = async ({
 /**
  * get all user information (paginated)
  */
-export const getAllUsers = async (page: number = 1, limit: number = 10) => {
+export const getAllUsers = async (
+  page: number = 1,
+  limit: number = 10,
+  includeDeleted: boolean = false,
+) => {
   const [users, meta] = await prisma.user
-    .paginate({ where: { isDeleted: false } })
+    .paginate({ where: includeDeleted ? {} : { isDeleted: false } })
     .withPages({ page, limit, includePageCount: true });
 
   return {
