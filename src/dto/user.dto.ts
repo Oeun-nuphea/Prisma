@@ -28,13 +28,3 @@ export interface LoginResponseDto {
   token: string;
   user: UserResponseDto;
 }
-
-
-// Request Admin DTOs
-
-
-export interface LoginAdminDto {
-  email: string;
-  password: string;
-  private: string
-}

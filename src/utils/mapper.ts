@@ -1,5 +1,6 @@
-import { User, Note } from "@prisma/client";
+import { User, Note, Admin } from "@prisma/client";
 import { UserResponseDto, LoginResponseDto } from "../dto/user.dto";
+import { AdminResponseDto, LoginAdminResponseDto } from "../dto/admin.dto";
 import { NoteResponseDto } from "../dto/note.dto";
 
 // ─── User Mappers ─────────────────────────────────────────────────────────────
@@ -22,6 +23,27 @@ export const toLoginResponse = (
 ): LoginResponseDto => ({
   token,
   user: toUserResponse(user),
+});
+
+/**
+ * Maps an Admin record to the admin response shape.
+ */
+export const toAdminResponse = (admin: Admin): AdminResponseDto => ({
+  id: admin.id,
+  name: admin.name,
+  email: admin.email,
+  role: admin.role,
+});
+
+/**
+ * Wraps a token + admin into the admin login response shape.
+ */
+export const toAdminLoginResponse = (
+  admin: Admin,
+  token: string,
+): LoginAdminResponseDto => ({
+  token,
+  admin: toAdminResponse(admin),
 });
 
 // ─── Note Mappers ─────────────────────────────────────────────────────────────

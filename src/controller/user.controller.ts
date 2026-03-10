@@ -11,24 +11,24 @@ const parseId = (raw: string | string[]): number =>
  * @param _req 
  * @param res 
  */
-export const getUsers = async (_req: Request, res: Response) => {
-  const users = await UserService.getAllUsers();
-  res.json(users);
-};
+// export const getUsers = async (_req: Request, res: Response) => {
+//   const users = await UserService.getAllUsers();
+//   res.json(users);
+// };
 
-/**
- * Get user by ID Admin
- * @param req 
- * @param res 
- */
-export const getUserById = async (req: Request, res: Response) => {
-  const id = parseId(req.params.id);
-  if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+// /**
+//  * Get user by ID Admin
+//  * @param req 
+//  * @param res 
+//  */
+// export const getUserById = async (req: Request, res: Response) => {
+//   const id = parseId(req.params.id);
+//   if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-  const user = await UserService.getUserById(id);
-  if (!user) return res.status(404).json({ message: "User not found" });
-  res.json(user);
-};
+//   const user = await UserService.getUserById(id);
+//   if (!user) return res.status(404).json({ message: "User not found" });
+//   res.json(user);
+// };
 
 
 /**

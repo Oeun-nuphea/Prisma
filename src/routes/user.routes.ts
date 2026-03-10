@@ -9,14 +9,6 @@ import {
 
 const router = Router();
 
-
-/**
- * Admin Access
- */
-router.get("/", UserController.getUsers);
-router.get("/:id", UserController.getUserById);
-
-
 /**
  * Normal User Access
  */
