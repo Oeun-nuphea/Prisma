@@ -22,10 +22,15 @@ export const loginAdmin = async (req: Request, res: Response) => {
  * GET /admin/users
  * Get all users (admin only)
  */
-export const getUsers = async (_req: Request, res: Response) => {
+export const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await AdminService.getAllUsers();
-    res.status(200).json(users);
+    const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10),
+    );
+    const result = await AdminService.getAllUsers(page, limit);
+    res.status(200).json(result);
   } catch (err: any) {
     res
       .status(err.status ?? 500)

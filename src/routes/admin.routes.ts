@@ -54,9 +54,22 @@ router.post("/login", validate(LoginAdminSchema), AdminController.loginAdmin);
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Items per page (max 100)
  *     responses:
  *       200:
- *         description: List of all users
+ *         description: Paginated list of users
  *       401:
  *         description: Unauthorized
  *       403:

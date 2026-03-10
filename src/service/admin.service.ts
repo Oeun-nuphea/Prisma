@@ -43,13 +43,17 @@ export const loginAdmin = async ({
 };
 
 /**
- * get all user information
+ * get all user information (paginated)
  */
-export const getAllUsers = async () => {
-  const users = await prisma.user.findMany({
-    where: { isDeleted: false },
-  });
-  return users.map(toUserResponse);
+export const getAllUsers = async (page: number = 1, limit: number = 10) => {
+  const [users, meta] = await prisma.user
+    .paginate({ where: { isDeleted: false } })
+    .withPages({ page, limit, includePageCount: true });
+
+  return {
+    data: users.map(toUserResponse),
+    meta,
+  };
 };
 
 export const getUserById = async (id: number) => {
