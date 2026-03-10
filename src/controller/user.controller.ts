@@ -6,11 +6,10 @@ import { CreateUserDto, UpdateUserDto, LoginUserDto } from "../dto/user.dto";
 const parseId = (raw: string | string[]): number =>
   parseInt(Array.isArray(raw) ? raw[0] : raw, 10);
 
-
 /**
  * These all below are for normal user
- * @param req 
- * @param res 
+ * @param req
+ * @param res
  */
 export const createUser = async (req: Request, res: Response) => {
   try {
@@ -29,11 +28,17 @@ export const deleteUser = async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-    const user = await UserService.softDeleteUser(id);
+    const requestingUserId = req.body.userId as number;
+    if (!requestingUserId)
+      return res.status(401).json({ message: "Unauthorized" });
+
+    const user = await UserService.softDeleteUser(id, requestingUserId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.status(204)
+    return res.status(204).send();
   } catch (err: any) {
+    if (err.message.startsWith("Unauthorized"))
+      return res.status(403).json({ message: err.message });
     res.status(err.status ?? 500).json({ message: err.message });
   }
 };

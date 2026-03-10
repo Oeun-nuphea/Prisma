@@ -59,7 +59,10 @@ export const saveLoginDevice = (
     },
   });
 
-export const softDeleteUser = async (id: number) => {
+export const softDeleteUser = async (id: number, requestingUserId: number) => {
+  if (requestingUserId !== id)
+    throw new Error("Unauthorized: You can only delete your own account");
+
   const user = await prisma.user.findUnique({ where: { id } });
 
   if (!user || user.isDeleted) return null;
