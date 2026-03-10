@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const CreateNoteSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  body: z.string().min(1, "Body is required"),
+  body: z.string().optional(),
 });
 
 export const UpdateNoteSchema = z.object({
