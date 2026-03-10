@@ -84,3 +84,17 @@ export const getUserById = async (
   if (!user) return null;
   return toUserResponse(user);
 };
+
+/**
+ * Admin sets a user's isActive status (activate or deactivate)
+ */
+export const setUserActive = async (id: number, isActive: boolean) => {
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user || user.isDeleted) return null;
+
+  const updated = await prisma.user.update({
+    where: { id },
+    data: { isActive },
+  });
+  return toUserResponse(updated);
+};

@@ -68,3 +68,45 @@ export const getUserById = async (req: Request, res: Response) => {
       .json({ message: err.message ?? "Internal Server Error" });
   }
 };
+
+/**
+ * PATCH /admin/users/:id/deactivate
+ * Deactivate a user account (admin only)
+ */
+export const deactivateUser = async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+    const user = await AdminService.setUserActive(id, false);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res
+      .status(200)
+      .json({ message: "User account has been deactivated.", user });
+  } catch (err: any) {
+    res
+      .status(err.status ?? 500)
+      .json({ message: err.message ?? "Internal Server Error" });
+  }
+};
+
+/**
+ * PATCH /admin/users/:id/activate
+ * Activate a user account (admin only)
+ */
+export const activateUser = async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+    const user = await AdminService.setUserActive(id, true);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.status(200).json({ message: "User account has been activated.", user });
+  } catch (err: any) {
+    res
+      .status(err.status ?? 500)
+      .json({ message: err.message ?? "Internal Server Error" });
+  }
+};

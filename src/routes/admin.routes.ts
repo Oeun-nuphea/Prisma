@@ -125,4 +125,60 @@ router.get("/users", adminHandler, AdminController.getUsers);
  */
 router.get("/users/:id", adminHandler, AdminController.getUserById);
 
+/**
+ * @swagger
+ * /admin/users/{id}/deactivate:
+ *   patch:
+ *     summary: Deactivate a user account (admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User deactivated
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden — not an admin
+ *       404:
+ *         description: User not found
+ */
+router.patch(
+  "/users/:id/deactivate",
+  adminHandler,
+  AdminController.deactivateUser,
+);
+
+/**
+ * @swagger
+ * /admin/users/{id}/activate:
+ *   patch:
+ *     summary: Activate a user account (admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User activated
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden — not an admin
+ *       404:
+ *         description: User not found
+ */
+router.patch("/users/:id/activate", adminHandler, AdminController.activateUser);
+
 export default router;

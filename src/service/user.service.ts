@@ -38,6 +38,12 @@ export const loginUser = async ({ email, password }: LoginUserDto) => {
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) throw new Error("Invalid email or password");
 
+  if (!user.isActive)
+    throw Object.assign(
+      new Error("Your account has been deactivated. Please contact support."),
+      { status: 403 },
+    );
+
   const token = signToken({
     userId: String(user.id),
     name: user.name,

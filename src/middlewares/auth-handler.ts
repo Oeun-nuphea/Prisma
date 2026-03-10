@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../config/jwt";
+import { prisma } from "../config/db";
 
 type AuthenticatedRequest = Request & { userId?: number };
 
-export const authHandler = (
+export const authHandler = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const authHeader = req.headers.authorization;
@@ -27,6 +28,19 @@ export const authHandler = (
     const userId = Number(payload.userId);
     if (isNaN(userId) || userId <= 0) {
       return res.status(401).json({ message: "Invalid token payload" });
+    }
+
+    // Check the user still exists and is active
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.isDeleted) {
+      return res.status(401).json({ message: "Account not found" });
+    }
+    if (!user.isActive) {
+      return res
+        .status(403)
+        .json({
+          message: "Your account has been deactivated. Please contact support.",
+        });
     }
 
     (req as AuthenticatedRequest).userId = userId;
