@@ -13,11 +13,11 @@ import rateLimit from "express-rate-limit";
 dotenv.config();
 
 const app: Application = express();
-app.set("trust proxy", 1); // trust first proxy so req.ip and X-Forwarded-For work correctly
+app.set("trust proxy", 1);
 
 const limiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  limit: 100, // max 100 requests per window
+  windowMs: 5 * 60 * 1000,
+  limit: 100,
   message: { message: "Too many requests, please try again later." },
 });
 
@@ -26,7 +26,7 @@ app.use(limiter);
 const PORT = process.env.PORT || 4000;
 app.use(cors({ origin: true, credentials: true }));
 app.use(cookieParser());
-app.use(helmet({ contentSecurityPolicy: false })); // disable CSP so Swagger UI loads
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // ─── Swagger Setup ────────────────────────────────────────────────────────────
 const swaggerSpec = swaggerJsdoc({
@@ -47,12 +47,51 @@ const swaggerSpec = swaggerJsdoc({
         },
       },
     },
+    security: [{ bearerAuth: [] }],
   },
   apis: ["./src/routes/*.ts"],
 });
 
+// Encoded as a data URI — no static file or customHtml needed
+const swaggerAutofillScript = Buffer.from(`
+(function () {
+  const _fetch = window.fetch;
+
+  window.fetch = async function (...args) {
+    const response = await _fetch.apply(this, args);
+    const clone = response.clone();
+
+    try {
+      const body = await clone.json();
+      if (body?.accessToken) {
+        // Poll until swagger UI is ready, then authorize
+        (function authorize() {
+          if (window.ui) {
+            window.ui.preauthorizeApiKey("bearerAuth", body.accessToken);
+          } else {
+            setTimeout(authorize, 200);
+          }
+        })();
+      }
+    } catch (_) {}
+
+    return response;
+  };
+})();
+`).toString("base64");
+
 app.use(express.json());
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+    customSiteTitle: "Note API Docs",
+    customJs: `data:text/javascript;base64,${swaggerAutofillScript}`,
+  }),
+);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/users", user);
@@ -63,6 +102,6 @@ app.get("/", (_req, res) => res.json({ message: "Note is running" }));
 
 app.listen(Number(PORT), "0.0.0.0", () =>
   console.log(
-    `Server running at http://localhost:${PORT}\nSwagger docs: http://localhost:${PORT}/docs`,
+    `Server running at http://localhost:${PORT}\nSwagger docs: http://localhost:${PORT}/api-docs`,
   ),
 );

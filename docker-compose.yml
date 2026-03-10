@@ -11,9 +11,11 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=4000
-      - DATABASE_URL=postgresql://note:mypassword@db:5432/note_db?schema=public
-      - JWT_TOKEN=123
-      - JWT_EXPIRES_IN=90d
+      - DATABASE_URL=${DATABASE_URL}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - ACCESS_TOKEN_EXPIRES_IN=${ACCESS_TOKEN_EXPIRES_IN}
+      - REFRESH_TOKEN_EXPIRES_IN=${REFRESH_TOKEN_EXPIRES_IN}
     volumes:
       - .:/app
       - /app/node_modules
@@ -29,9 +31,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=note
-      - POSTGRES_PASSWORD=mypassword
-      - POSTGRES_DB=note_db
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - db_data:/var/lib/postgresql/data
     restart: unless-stopped

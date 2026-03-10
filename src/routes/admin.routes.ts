@@ -19,6 +19,7 @@ const router = Router();
  *   post:
  *     summary: Admin login
  *     tags: [Admin]
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -52,6 +53,7 @@ router.post("/login", validate(LoginAdminSchema), AdminController.loginAdmin);
  *   post:
  *     summary: Rotate refresh token and issue new access token (admin)
  *     tags: [Admin]
+ *     security: []
  *     responses:
  *       200:
  *         description: New access token issued
@@ -68,8 +70,6 @@ router.post("/refresh", AdminController.refreshToken);
  *   get:
  *     summary: Get all users (admin only)
  *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page

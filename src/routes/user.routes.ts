@@ -84,6 +84,7 @@ router.delete("/:id", authHandler, UserController.deleteUser);
  *   post:
  *     summary: Login as a user
  *     tags: [Users]
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -112,6 +113,7 @@ router.post("/login", validate(LoginUserSchema), UserController.loginUser);
  *   post:
  *     summary: Refresh access token using the refresh token cookie
  *     tags: [Users]
+ *     security: []
  *     description: Reads the `refreshToken` httpOnly cookie, validates it, and returns a new access token + rotated refresh token cookie.
  *     responses:
  *       200:

@@ -25,9 +25,9 @@ export const toUserResponse = (user: User): UserResponseDto => ({
  */
 export const toLoginResponse = (
   user: User,
-  token: string,
+  accessToken: string,
 ): LoginResponseDto => ({
-  token,
+  accessToken,
   user: toUserResponse(user),
 });
 
@@ -58,9 +58,9 @@ export const toAdminResponse = (admin: Admin): AdminResponseDto => ({
  */
 export const toAdminLoginResponse = (
   admin: Admin,
-  token: string,
+  accessToken: string,
 ): LoginAdminResponseDto => ({
-  token,
+  accessToken,
   admin: toAdminResponse(admin),
 });
 

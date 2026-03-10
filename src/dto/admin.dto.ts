@@ -16,6 +16,6 @@ export interface AdminResponseDto {
 }
 
 export interface LoginAdminResponseDto {
-  token: string;
+  accessToken: string;
   admin: AdminResponseDto;
 }
