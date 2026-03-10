@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyToken } from "../config/jwt";
+import { verifyAccessToken } from "../config/jwt";
 import { prisma } from "../config/db";
 
 type AuthenticatedRequest = Request & { userId?: number };
@@ -19,7 +19,7 @@ export const authHandler = async (
     }
 
     const token = authHeader.split(" ")[1];
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
 
     if (!payload?.userId) {
       return res.status(401).json({ message: "Invalid token payload" });
@@ -36,11 +36,9 @@ export const authHandler = async (
       return res.status(401).json({ message: "Account not found" });
     }
     if (!user.isActive) {
-      return res
-        .status(403)
-        .json({
-          message: "Your account has been deactivated. Please contact support.",
-        });
+      return res.status(403).json({
+        message: "Your account has been deactivated. Please contact support.",
+      });
     }
 
     (req as AuthenticatedRequest).userId = userId;

@@ -1,5 +1,5 @@
 import { prisma } from "../config/db";
-import { signToken } from "../config/jwt";
+import { signTokenPair, verifyRefreshToken } from "../config/jwt";
 import { CreateUserDto, UpdateUserDto, LoginUserDto } from "../dto/user.dto";
 import { toUserResponse, toLoginResponse } from "../utils/mapper";
 import bcrypt from "bcryptjs";
@@ -44,13 +44,14 @@ export const loginUser = async ({ email, password }: LoginUserDto) => {
       { status: 403 },
     );
 
-  const token = signToken({
+  const { accessToken, refreshToken } = signTokenPair({
     userId: String(user.id),
     name: user.name,
     email: user.email,
+    role: "user",
   });
 
-  return toLoginResponse(user, token);
+  return { ...toLoginResponse(user, accessToken), refreshToken };
 };
 
 export const saveLoginDevice = (
@@ -75,4 +76,34 @@ export const softDeleteUser = async (id: number, requestingUserId: number) => {
   if (!user || user.isDeleted) return null;
 
   return prisma.user.update({ where: { id }, data: { isDeleted: true } });
+};
+
+export const refreshTokens = async (token: string) => {
+  let payload: { userId: string; role?: string };
+  try {
+    payload = verifyRefreshToken(token);
+  } catch {
+    throw Object.assign(new Error("Invalid or expired refresh token"), {
+      status: 401,
+    });
+  }
+
+  const userId = Number(payload.userId);
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user || user.isDeleted)
+    throw Object.assign(new Error("Account not found"), { status: 401 });
+
+  if (!user.isActive)
+    throw Object.assign(
+      new Error("Your account has been deactivated. Please contact support."),
+      { status: 403 },
+    );
+
+  return signTokenPair({
+    userId: String(user.id),
+    name: user.name,
+    email: user.email,
+    role: "user",
+  });
 };

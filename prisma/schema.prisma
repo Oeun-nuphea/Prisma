@@ -10,38 +10,39 @@ model User {
   id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
-  password  String   
+  password  String
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   isActive  Boolean  @default(true)
-  notes     Note[] 
+  role      String   @default("user")
+
+  notes       Note[]
   userDevices UserDevice[]
 }
 
 model Note {
-  id        Int      @id @default(autoincrement())
-  title     String
-  body      String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  isDeleted Boolean  @default(false)
-  isFavorite Boolean @default(false)
-  shareToken String? @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id         Int      @id @default(autoincrement())
+  title      String
+  body       String
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  isDeleted  Boolean  @default(false)
+  isFavorite Boolean  @default(false)
+  shareToken String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 }
 
 model UserDevice {
   id        Int      @id @default(autoincrement())
-  ip        String?   
+  ip        String?
   broswer   String
   os        String
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
-  
 }
 
 model Admin {
@@ -49,7 +50,7 @@ model Admin {
   name      String
   email     String   @unique
   role      String   @default("admin")
-  password  String   
+  password  String
   private   String
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())

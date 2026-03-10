@@ -1,5 +1,5 @@
 import { prisma } from "../config/db";
-import { signToken } from "../config/jwt";
+import { signTokenPair } from "../config/jwt";
 import { LoginAdminDto } from "../dto/admin.dto";
 import { toAdminLoginResponse, toUserResponseWithStatus } from "../utils/mapper";
 import bcrypt from "bcryptjs";
@@ -32,14 +32,14 @@ export const loginAdmin = async ({
       status: 401,
     });
 
-  const token = signToken({
+  const { accessToken, refreshToken } = signTokenPair({
     userId: String(admin.id),
     name: admin.name,
     email: admin.email,
     role: "admin",
   });
 
-  return toAdminLoginResponse(admin, token);
+  return { ...toAdminLoginResponse(admin, accessToken), refreshToken }; 
 };
 
 /**

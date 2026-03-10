@@ -46,7 +46,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 export const loginUser = async (req: Request, res: Response) => {
   try {
     const dto: LoginUserDto = req.body;
-    const loginResult = await UserService.loginUser(dto);
+    const { refreshToken, ...loginResult } = await UserService.loginUser(dto);
     const device = detectDeviceFromRequest(req);
 
     await UserService.saveLoginDevice(loginResult.user.id, {
@@ -55,8 +55,40 @@ export const loginUser = async (req: Request, res: Response) => {
       ip: device.ip,
     });
 
-    res.status(200).json(loginResult);
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    res.status(200).json(loginResult); // accessToken + user, no refreshToken exposed
   } catch (err: any) {
     res.status(err.status ?? 500).json({ message: err.message });
+  }
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies?.refreshToken as string | undefined;
+    if (!token)
+      return res.status(401).json({ message: "No refresh token provided" });
+
+    const { accessToken, refreshToken: newRefreshToken } =
+      await UserService.refreshTokens(token);
+
+    // Rotate: replace the old cookie with the new refresh token
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res.status(200).json({ accessToken });
+  } catch (err: any) {
+    return res
+      .status(err.status ?? 500)
+      .json({ message: err.message ?? "Internal Server Error" });
   }
 };

@@ -106,4 +106,28 @@ router.delete("/:id", authHandler, UserController.deleteUser);
  */
 router.post("/login", validate(LoginUserSchema), UserController.loginUser);
 
+/**
+ * @swagger
+ * /users/refresh:
+ *   post:
+ *     summary: Refresh access token using the refresh token cookie
+ *     tags: [Users]
+ *     description: Reads the `refreshToken` httpOnly cookie, validates it, and returns a new access token + rotated refresh token cookie.
+ *     responses:
+ *       200:
+ *         description: New access token issued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *       401:
+ *         description: No or invalid refresh token
+ *       403:
+ *         description: Account deactivated
+ */
+router.post("/refresh", UserController.refreshToken);
+
 export default router;

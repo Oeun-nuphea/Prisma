@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyToken } from "../config/jwt";
+import { verifyAccessToken } from "../config/jwt";
 
 export type AdminRequest = Request & { adminId?: number };
 
@@ -17,7 +17,7 @@ export const adminHandler = (
     }
 
     const token = authHeader.split(" ")[1];
-    const payload = verifyToken(token);
+    const payload = verifyAccessToken(token);
 
     if (!payload?.userId) {
       return res.status(401).json({ message: "Invalid token payload" });
