@@ -1,5 +1,9 @@
 import { prisma } from "../config/db";
-import { signTokenPair } from "../config/jwt";
+import {
+  getTokenExpiryDate,
+  signTokenPair,
+  verifyRefreshToken,
+} from "../config/jwt";
 import { LoginAdminDto } from "../dto/admin.dto";
 import { toAdminLoginResponse, toUserResponseWithStatus } from "../utils/mapper";
 import bcrypt from "bcryptjs";
@@ -39,7 +43,75 @@ export const loginAdmin = async ({
     role: "admin",
   });
 
-  return { ...toAdminLoginResponse(admin, accessToken), refreshToken }; 
+  const refreshTokenExpiresAt = getTokenExpiryDate(refreshToken);
+  if (!refreshTokenExpiresAt)
+    throw new Error("Failed to derive refresh token expiry");
+
+  await prisma.admin.update({
+    where: { id: admin.id },
+    data: {
+      refreshTokenHash: await bcrypt.hash(refreshToken, 10),
+      refreshTokenExpiresAt,
+    },
+  });
+
+  return { ...toAdminLoginResponse(admin, accessToken), refreshToken };
+};
+
+export const refreshTokens = async (token: string) => {
+  let payload: { userId: string; role?: string };
+  try {
+    payload = verifyRefreshToken(token);
+  } catch {
+    throw Object.assign(new Error("Invalid or expired refresh token"), {
+      status: 401,
+    });
+  }
+
+  if (payload.role !== "admin")
+    throw Object.assign(new Error("Forbidden: admin access only"), {
+      status: 403,
+    });
+
+  const adminId = Number(payload.userId);
+  const admin = await prisma.admin.findUnique({ where: { id: adminId } });
+
+  if (!admin || admin.isDeleted)
+    throw Object.assign(new Error("Account not found"), { status: 401 });
+
+  if (!admin.refreshTokenHash || !admin.refreshTokenExpiresAt)
+    throw Object.assign(new Error("Invalid or expired refresh token"), {
+      status: 401,
+    });
+
+  const isTokenValid = await bcrypt.compare(token, admin.refreshTokenHash);
+  if (!isTokenValid || admin.refreshTokenExpiresAt <= new Date())
+    throw Object.assign(new Error("Invalid or expired refresh token"), {
+      status: 401,
+    });
+
+  const tokens = signTokenPair({
+    userId: String(admin.id),
+    name: admin.name,
+    email: admin.email,
+    role: "admin",
+  });
+
+  const refreshTokenExpiresAt = getTokenExpiryDate(tokens.refreshToken);
+  if (!refreshTokenExpiresAt)
+    throw Object.assign(new Error("Failed to derive refresh token expiry"), {
+      status: 500,
+    });
+
+  await prisma.admin.update({
+    where: { id: admin.id },
+    data: {
+      refreshTokenHash: await bcrypt.hash(tokens.refreshToken, 10),
+      refreshTokenExpiresAt,
+    },
+  });
+
+  return tokens;
 };
 
 /**

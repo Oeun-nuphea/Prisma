@@ -25,6 +25,34 @@ export const loginAdmin = async (req: Request, res: Response) => {
 };
 
 /**
+ * POST /admin/refresh
+ * Rotate refresh token and issue a new access token (admin only)
+ */
+export const refreshToken = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies?.refreshToken as string | undefined;
+    if (!token)
+      return res.status(401).json({ message: "No refresh token provided" });
+
+    const { accessToken, refreshToken: newRefreshToken } =
+      await AdminService.refreshTokens(token);
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res.status(200).json({ accessToken });
+  } catch (err: any) {
+    return res
+      .status(err.status ?? 500)
+      .json({ message: err.message ?? "Internal Server Error" });
+  }
+};
+
+/**
  * GET /admin/users
  * Get all users (admin only)
  */

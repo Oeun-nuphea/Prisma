@@ -1,5 +1,9 @@
 import { prisma } from "../config/db";
-import { signTokenPair, verifyRefreshToken } from "../config/jwt";
+import {
+  getTokenExpiryDate,
+  signTokenPair,
+  verifyRefreshToken,
+} from "../config/jwt";
 import { CreateUserDto, UpdateUserDto, LoginUserDto } from "../dto/user.dto";
 import { toUserResponse, toLoginResponse } from "../utils/mapper";
 import bcrypt from "bcryptjs";
@@ -51,6 +55,18 @@ export const loginUser = async ({ email, password }: LoginUserDto) => {
     role: "user",
   });
 
+  const refreshTokenExpiresAt = getTokenExpiryDate(refreshToken);
+  if (!refreshTokenExpiresAt)
+    throw new Error("Failed to derive refresh token expiry");
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      refreshTokenHash: await bcrypt.hash(refreshToken, 10),
+      refreshTokenExpiresAt,
+    },
+  });
+
   return { ...toLoginResponse(user, accessToken), refreshToken };
 };
 
@@ -100,10 +116,37 @@ export const refreshTokens = async (token: string) => {
       { status: 403 },
     );
 
-  return signTokenPair({
+  if (!user.refreshTokenHash || !user.refreshTokenExpiresAt)
+    throw Object.assign(new Error("Invalid or expired refresh token"), {
+      status: 401,
+    });
+
+  const isTokenValid = await bcrypt.compare(token, user.refreshTokenHash);
+  if (!isTokenValid || user.refreshTokenExpiresAt <= new Date())
+    throw Object.assign(new Error("Invalid or expired refresh token"), {
+      status: 401,
+    });
+
+  const tokens = signTokenPair({
     userId: String(user.id),
     name: user.name,
     email: user.email,
     role: "user",
   });
+
+  const refreshTokenExpiresAt = getTokenExpiryDate(tokens.refreshToken);
+  if (!refreshTokenExpiresAt)
+    throw Object.assign(new Error("Failed to derive refresh token expiry"), {
+      status: 500,
+    });
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      refreshTokenHash: await bcrypt.hash(tokens.refreshToken, 10),
+      refreshTokenExpiresAt,
+    },
+  });
+
+  return tokens;
 };

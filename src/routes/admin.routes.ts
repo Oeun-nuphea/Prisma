@@ -48,6 +48,22 @@ router.post("/login", validate(LoginAdminSchema), AdminController.loginAdmin);
 
 /**
  * @swagger
+ * /admin/refresh:
+ *   post:
+ *     summary: Rotate refresh token and issue new access token (admin)
+ *     tags: [Admin]
+ *     responses:
+ *       200:
+ *         description: New access token issued
+ *       401:
+ *         description: No refresh token or invalid refresh token
+ *       403:
+ *         description: Forbidden — not an admin
+ */
+router.post("/refresh", AdminController.refreshToken);
+
+/**
+ * @swagger
  * /admin/users:
  *   get:
  *     summary: Get all users (admin only)

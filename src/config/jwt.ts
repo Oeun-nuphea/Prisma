@@ -85,3 +85,9 @@ export const verifyAccessToken = (token: string): TokenPayload =>
 
 export const verifyRefreshToken = (token: string): TokenPayload =>
   jwt.verify(token, getRefreshSecret()) as TokenPayload;
+
+export const getTokenExpiryDate = (token: string): Date | null => {
+  const decoded = jwt.decode(token) as jwt.JwtPayload | null;
+  if (!decoded || typeof decoded.exp !== "number") return null;
+  return new Date(decoded.exp * 1000);
+};

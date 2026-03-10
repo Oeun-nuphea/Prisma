@@ -16,6 +16,8 @@ model User {
   updatedAt DateTime @default(now()) @updatedAt
   isActive  Boolean  @default(true)
   role      String   @default("user")
+  refreshTokenHash      String?
+  refreshTokenExpiresAt DateTime?
 
   notes       Note[]
   userDevices UserDevice[]
@@ -53,6 +55,8 @@ model Admin {
   password  String
   private   String
   isDeleted Boolean  @default(false)
+  refreshTokenHash      String?
+  refreshTokenExpiresAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
