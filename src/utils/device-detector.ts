@@ -3,11 +3,13 @@ import type { Request } from "express";
 export type DeviceInfo = {
   browser: string;
   os: string;
+  ip: string;
 };
 
 const UNKNOWN_DEVICE: DeviceInfo = {
   browser: "Unknown",
   os: "Unknown",
+  ip: "Unknown",
 };
 
 const detectBrowser = (userAgent: string): string => {
@@ -17,7 +19,11 @@ const detectBrowser = (userAgent: string): string => {
     return "Chrome";
   }
   if (/Firefox\//i.test(userAgent)) return "Firefox";
-  if (/Safari\//i.test(userAgent) && /Version\//i.test(userAgent) && !/Chrome\//i.test(userAgent)) {
+  if (
+    /Safari\//i.test(userAgent) &&
+    /Version\//i.test(userAgent) &&
+    !/Chrome\//i.test(userAgent)
+  ) {
     return "Safari";
   }
   if (/MSIE\s|Trident\//i.test(userAgent)) return "Internet Explorer";
@@ -27,20 +33,37 @@ const detectBrowser = (userAgent: string): string => {
 };
 
 const detectOS = (userAgent: string): string => {
-  if (/Windows NT/i.test(userAgent)) return "Windows";
+  // ⚠️ More specific checks MUST come before generic ones.
+  // Android UA also contains "Linux", so check Android first.
   if (/Android/i.test(userAgent)) return "Android";
   if (/(iPhone|iPad|iPod)/i.test(userAgent)) return "iOS";
+  if (/Windows NT/i.test(userAgent)) return "Windows";
   if (/Mac OS X/i.test(userAgent)) return "macOS";
-  if (/Linux/i.test(userAgent)) return "Linux";
+  if (/Linux/i.test(userAgent)) return "Linux"; // desktop Linux only
   return "Unknown";
 };
 
-export const detectDevice = (userAgent?: string | null): DeviceInfo => {
-  if (!userAgent) return UNKNOWN_DEVICE;
+export const getClientIP = (req: Request): string => {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (forwarded) {
+    const ip = Array.isArray(forwarded)
+      ? forwarded[0]
+      : forwarded.split(",")[0];
+    return ip?.trim() ?? "Unknown";
+  }
+  return req.socket?.remoteAddress ?? req.ip ?? "Unknown";
+};
+
+export const detectDevice = (
+  userAgent?: string | null,
+  ip: string = "Unknown",
+): DeviceInfo => {
+  if (!userAgent) return { ...UNKNOWN_DEVICE, ip };
 
   return {
     browser: detectBrowser(userAgent),
     os: detectOS(userAgent),
+    ip,
   };
 };
 
@@ -50,4 +73,5 @@ export const getUserAgent = (req: Request): string => {
   return header ?? "";
 };
 
-export const detectDeviceFromRequest = (req: Request): DeviceInfo => detectDevice(getUserAgent(req));
+export const detectDeviceFromRequest = (req: Request): DeviceInfo =>
+  detectDevice(getUserAgent(req), getClientIP(req));

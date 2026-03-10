@@ -52,6 +52,7 @@ export const loginUser = async (req: Request, res: Response) => {
     await UserService.saveLoginDevice(loginResult.user.id, {
       browser: device.browser,
       os: device.os,
+      ip: device.ip,
     });
 
     res.status(200).json(loginResult);

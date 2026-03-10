@@ -55,13 +55,14 @@ export const loginUser = async ({ email, password }: LoginUserDto) => {
 
 export const saveLoginDevice = (
   userId: number,
-  device: { browser: string; os: string },
+  device: { browser: string; os: string; ip?: string },
 ) =>
   prisma.userDevice.create({
     data: {
       userId,
       broswer: device.browser || "Unknown",
       os: device.os || "Unknown",
+      ip: device.ip || null,
     },
   });
 

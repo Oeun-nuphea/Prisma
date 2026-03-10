@@ -12,11 +12,12 @@ import rateLimit from "express-rate-limit";
 dotenv.config();
 
 const app: Application = express();
+app.set("trust proxy", 1); // trust first proxy so req.ip and X-Forwarded-For work correctly
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  limit: 100,               // max 100 requests per window
-  message: { message: 'Too many requests, please try again later.' },
+  limit: 100, // max 100 requests per window
+  message: { message: "Too many requests, please try again later." },
 });
 
 app.use(limiter);
