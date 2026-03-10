@@ -95,57 +95,63 @@ export const softDeleteUser = async (id: number, requestingUserId: number) => {
 };
 
 export const refreshTokens = async (token: string) => {
+  // 1. Verify JWT signature before touching the DB
   let payload: { userId: string; role?: string };
   try {
     payload = verifyRefreshToken(token);
   } catch {
-    throw Object.assign(new Error("Invalid or expired refresh token"), {
-      status: 401,
-    });
+    throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
   }
 
   const userId = Number(payload.userId);
-  const user = await prisma.user.findUnique({ where: { id: userId } });
 
-  if (!user || user.isDeleted)
-    throw Object.assign(new Error("Account not found"), { status: 401 });
+  // 2. Atomic consume-and-reissue — prevents concurrent reuse of the same token
+  const tokens = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({ where: { id: userId } });
 
-  if (!user.isActive)
-    throw Object.assign(
-      new Error("Your account has been deactivated. Please contact support."),
-      { status: 403 },
-    );
+    if (!user || user.isDeleted)
+      throw Object.assign(new Error("Account not found"), { status: 401 });
 
-  if (!user.refreshTokenHash || !user.refreshTokenExpiresAt)
-    throw Object.assign(new Error("Invalid or expired refresh token"), {
-      status: 401,
+    if (!user.isActive)
+      throw Object.assign(
+        new Error("Your account has been deactivated. Please contact support."),
+        { status: 403 },
+      );
+
+    if (!user.refreshTokenHash || !user.refreshTokenExpiresAt)
+      throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
+
+    // 3. Check expiry before the bcrypt work
+    if (user.refreshTokenExpiresAt <= new Date())
+      throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
+
+    // 4. Validate the presented token against the stored hash
+    const isTokenValid = await bcrypt.compare(token, user.refreshTokenHash);
+    if (!isTokenValid)
+      throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
+
+    // 5. Generate replacement token pair
+    const newTokens = signTokenPair({
+      userId: String(user.id),
+      name: user.name,
+      email: user.email,
+      role: "user",
     });
 
-  const isTokenValid = await bcrypt.compare(token, user.refreshTokenHash);
-  if (!isTokenValid || user.refreshTokenExpiresAt <= new Date())
-    throw Object.assign(new Error("Invalid or expired refresh token"), {
-      status: 401,
+    const refreshTokenExpiresAt = getTokenExpiryDate(newTokens.refreshToken);
+    if (!refreshTokenExpiresAt)
+      throw Object.assign(new Error("Failed to derive refresh token expiry"), { status: 500 });
+
+    // 6. Atomically overwrite — old token is now dead
+    await tx.user.update({
+      where: { id: user.id },
+      data: {
+        refreshTokenHash: await bcrypt.hash(newTokens.refreshToken, 10),
+        refreshTokenExpiresAt,
+      },
     });
 
-  const tokens = signTokenPair({
-    userId: String(user.id),
-    name: user.name,
-    email: user.email,
-    role: "user",
-  });
-
-  const refreshTokenExpiresAt = getTokenExpiryDate(tokens.refreshToken);
-  if (!refreshTokenExpiresAt)
-    throw Object.assign(new Error("Failed to derive refresh token expiry"), {
-      status: 500,
-    });
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      refreshTokenHash: await bcrypt.hash(tokens.refreshToken, 10),
-      refreshTokenExpiresAt,
-    },
+    return newTokens;
   });
 
   return tokens;

@@ -59,56 +59,62 @@ export const loginAdmin = async ({
 };
 
 export const refreshTokens = async (token: string) => {
+  // 1. Verify JWT signature before touching the DB
   let payload: { userId: string; role?: string };
   try {
     payload = verifyRefreshToken(token);
   } catch {
-    throw Object.assign(new Error("Invalid or expired refresh token"), {
-      status: 401,
-    });
+    throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
   }
 
   if (payload.role !== "admin")
-    throw Object.assign(new Error("Forbidden: admin access only"), {
-      status: 403,
-    });
+    throw Object.assign(new Error("Forbidden: admin access only"), { status: 403 });
 
   const adminId = Number(payload.userId);
-  const admin = await prisma.admin.findUnique({ where: { id: adminId } });
 
-  if (!admin || admin.isDeleted)
-    throw Object.assign(new Error("Account not found"), { status: 401 });
+  // 2. Wrap the entire consume-and-reissue cycle in a transaction.
+  //    This guarantees the token is invalidated exactly once, even under
+  //    concurrent requests with the same token.
+  const tokens = await prisma.$transaction(async (tx) => {
+    const admin = await tx.admin.findUnique({ where: { id: adminId } });
 
-  if (!admin.refreshTokenHash || !admin.refreshTokenExpiresAt)
-    throw Object.assign(new Error("Invalid or expired refresh token"), {
-      status: 401,
+    if (!admin || admin.isDeleted)
+      throw Object.assign(new Error("Account not found"), { status: 401 });
+
+    if (!admin.refreshTokenHash || !admin.refreshTokenExpiresAt)
+      throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
+
+    // 3. Reject expired tokens before the bcrypt work
+    if (admin.refreshTokenExpiresAt <= new Date())
+      throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
+
+    // 4. Validate the presented token against the stored hash
+    const isTokenValid = await bcrypt.compare(token, admin.refreshTokenHash);
+    if (!isTokenValid)
+      throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
+
+    // 5. Generate the replacement token pair
+    const newTokens = signTokenPair({
+      userId: String(admin.id),
+      name: admin.name,
+      email: admin.email,
+      role: "admin",
     });
 
-  const isTokenValid = await bcrypt.compare(token, admin.refreshTokenHash);
-  if (!isTokenValid || admin.refreshTokenExpiresAt <= new Date())
-    throw Object.assign(new Error("Invalid or expired refresh token"), {
-      status: 401,
+    const refreshTokenExpiresAt = getTokenExpiryDate(newTokens.refreshToken);
+    if (!refreshTokenExpiresAt)
+      throw Object.assign(new Error("Failed to derive refresh token expiry"), { status: 500 });
+
+    // 6. Atomically overwrite the old hash — the old token is now dead
+    await tx.admin.update({
+      where: { id: admin.id },
+      data: {
+        refreshTokenHash: await bcrypt.hash(newTokens.refreshToken, 10),
+        refreshTokenExpiresAt,
+      },
     });
 
-  const tokens = signTokenPair({
-    userId: String(admin.id),
-    name: admin.name,
-    email: admin.email,
-    role: "admin",
-  });
-
-  const refreshTokenExpiresAt = getTokenExpiryDate(tokens.refreshToken);
-  if (!refreshTokenExpiresAt)
-    throw Object.assign(new Error("Failed to derive refresh token expiry"), {
-      status: 500,
-    });
-
-  await prisma.admin.update({
-    where: { id: admin.id },
-    data: {
-      refreshTokenHash: await bcrypt.hash(tokens.refreshToken, 10),
-      refreshTokenExpiresAt,
-    },
+    return newTokens;
   });
 
   return tokens;

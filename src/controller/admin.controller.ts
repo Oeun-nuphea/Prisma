@@ -37,18 +37,25 @@ export const refreshToken = async (req: Request, res: Response) => {
     const { accessToken, refreshToken: newRefreshToken } =
       await AdminService.refreshTokens(token);
 
+    // Overwrite the cookie immediately — old value is gone from the DB already
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({ accessToken });
   } catch (err: any) {
-    return res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
+    // If the token was invalid/replayed, clear the stale cookie
+    if (err.status === 401) {
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+    }
+    return res.status(err.status ?? 500).json({ message: err.message ?? "Internal Server Error" });
   }
 };
 

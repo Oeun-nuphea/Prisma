@@ -77,16 +77,23 @@ export const refreshToken = async (req: Request, res: Response) => {
     const { accessToken, refreshToken: newRefreshToken } =
       await UserService.refreshTokens(token);
 
-    // Rotate: replace the old cookie with the new refresh token
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({ accessToken });
   } catch (err: any) {
+    // Clear stale cookie so the client doesn't keep replaying a dead token
+    if (err.status === 401) {
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+    }
     return res
       .status(err.status ?? 500)
       .json({ message: err.message ?? "Internal Server Error" });
