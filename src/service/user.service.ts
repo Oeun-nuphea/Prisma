@@ -59,5 +59,10 @@ export const saveLoginDevice = (
     },
   });
 
-export const softDeleteUser = (id: number) =>
-  prisma.user.update({ where: { id }, data: { isDeleted: true } });
+export const softDeleteUser = async (id: number) => {
+  const user = await prisma.user.findUnique({ where: { id } });
+
+  if (!user || user.isDeleted) return null;
+
+  return prisma.user.update({ where: { id }, data: { isDeleted: true } });
+};
