@@ -49,9 +49,19 @@ export const getAllUsers = async (
   page: number = 1,
   limit: number = 10,
   includeDeleted: boolean = false,
+  filters: { name?: string; email?: string } = {},
 ) => {
+  const where: Record<string, any> = includeDeleted ? {} : { isDeleted: false };
+
+  if (filters.name) {
+    where.name = { contains: filters.name, mode: "insensitive" };
+  }
+  if (filters.email) {
+    where.email = { contains: filters.email, mode: "insensitive" };
+  }
+
   const [users, meta] = await prisma.user
-    .paginate({ where: includeDeleted ? {} : { isDeleted: false } })
+    .paginate({ where })
     .withPages({ page, limit, includePageCount: true });
 
   return {
@@ -60,8 +70,17 @@ export const getAllUsers = async (
   };
 };
 
-export const getUserById = async (id: number) => {
-  const user = await prisma.user.findUnique({ where: { id } });
+export const getUserById = async (
+  id: number,
+  includeDeleted: boolean = false,
+) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id,
+      ...(includeDeleted ? {} : { isDeleted: false }),
+    },
+  });
+
   if (!user) return null;
   return toUserResponse(user);
 };

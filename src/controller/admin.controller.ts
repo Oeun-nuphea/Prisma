@@ -30,7 +30,16 @@ export const getUsers = async (req: Request, res: Response) => {
       Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10),
     );
     const includeDeleted = req.query.includeDeleted === "true";
-    const result = await AdminService.getAllUsers(page, limit, includeDeleted);
+    const filters = {
+      name: req.query.name ? String(req.query.name) : undefined,
+      email: req.query.email ? String(req.query.email) : undefined,
+    };
+    const result = await AdminService.getAllUsers(
+      page,
+      limit,
+      includeDeleted,
+      filters,
+    );
     res.status(200).json(result);
   } catch (err: any) {
     res
@@ -48,7 +57,9 @@ export const getUserById = async (req: Request, res: Response) => {
     const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-    const user = await AdminService.getUserById(id);
+    const includeDeleted = req.query.includeDeleted === "true";
+
+    const user = await AdminService.getUserById(id, includeDeleted);
     if (!user) return res.status(404).json({ message: "User not found" });
     res.status(200).json(user);
   } catch (err: any) {

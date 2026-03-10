@@ -68,6 +68,16 @@ router.post("/login", validate(LoginAdminSchema), AdminController.loginAdmin);
  *           default: 10
  *         description: Items per page (max 100)
  *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filter by name (partial, case-insensitive)
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *         description: Filter by email (partial, case-insensitive)
+ *       - in: query
  *         name: includeDeleted
  *         schema:
  *           type: boolean
@@ -97,6 +107,12 @@ router.get("/users", adminHandler, AdminController.getUsers);
  *         required: true
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: includeDeleted
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Include soft-deleted users (true/false)
  *     responses:
  *       200:
  *         description: User data
