@@ -16,6 +16,8 @@ export const toUserResponse = (user: User): UserResponseDto => ({
   id: user.id,
   name: user.name,
   email: user.email,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
 });
 
 /**
@@ -71,6 +73,8 @@ export const toNoteResponse = (note: Note): NoteResponseDto => ({
   id: note.id,
   title: note.title,
   body: note.body,
+  createdAt: note.createdAt,
+  updatedAt: note.updatedAt,
 });
 
 export const toNoteListResponse = (notes: Note[]): NoteResponseDto[] =>
