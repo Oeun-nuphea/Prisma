@@ -49,3 +49,7 @@ docker compose exec db psql -U note -d note_db
 
 <!-- npm run prisma:migrate -->
 for new migration
+
+
+# seed admin
+npm run prisma:seed

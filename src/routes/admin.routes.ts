@@ -31,7 +31,7 @@ const router = Router();
  *                 example: admin@example.com
  *               password:
  *                 type: string
- *                 example: adminpass
+ *                 example: admin1234
  *               privateKey:
  *                 type: string
  *                 example: supersecretadminkey123

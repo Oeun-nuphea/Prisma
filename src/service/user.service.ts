@@ -5,23 +5,6 @@ import { toUserResponse, toLoginResponse } from "../utils/mapper";
 import bcrypt from "bcryptjs";
 
 /**
- * Admin get all users
- * @returns
- */
-// export const getAllUsers = async () => {
-//   const users = await prisma.user.findMany({
-//     where: { isDeleted: false },
-//   });
-//   return users.map(toUserResponse);
-// };
-
-// export const getUserById = async (id: number) => {
-//   const user = await prisma.user.findUnique({ where: { id } });
-//   if (!user) return null;
-//   return toUserResponse(user);
-// };
-
-/**
  * Normal user for all below
  * @param data
  * @returns
