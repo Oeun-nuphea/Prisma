@@ -2,6 +2,7 @@ import { prisma } from "../config/db";
 import { signToken } from "../config/jwt";
 import { CreateUserDto, UpdateUserDto, LoginUserDto } from "../dto/user.dto";
 import { toUserResponse, toLoginResponse } from "../utils/mapper";
+import bcrypt from "bcryptjs";
 
 export const getAllUsers = async () => {
   const users = await prisma.user.findMany({
@@ -28,7 +29,10 @@ export const createUser = async (data: CreateUserDto) => {
     throw { status: 409, message: "Email already exists" };
   }
 
-  const user = await prisma.user.create({ data: { name, email, password } });
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  const user = await prisma.user.create({ data: { name, email, password: hashedPassword } });
   return toUserResponse(user);
 };
 
@@ -47,8 +51,11 @@ export const updateUser = async (id: number, data: UpdateUserDto) => {
 
 export const loginUser = async ({ email, password }: LoginUserDto) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || user.password !== password)
-    throw { status: 401, message: "Invalid email or password" };
+  
+  if (!user || !user.password) throw new Error("Invalid email or password");
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) throw new Error("Invalid email or password");
 
   const token = signToken({
     userId: String(user.id),
