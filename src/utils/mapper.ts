@@ -73,6 +73,7 @@ export const toNoteResponse = (note: Note): NoteResponseDto => ({
   id: note.id,
   title: note.title,
   body: note.body,
+  isFavorite: note.isFavorite,
   createdAt: note.createdAt,
   updatedAt: note.updatedAt,
 });

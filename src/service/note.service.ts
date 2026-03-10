@@ -44,7 +44,7 @@ export const softDeleteNote = async (id: number, userId: number) => {
   if (!note || note.isDeleted)
     throw Object.assign(new Error("Note not found"), { status: 404 });
   if (note.userId !== userId)
-    throw Object.assign(new Error("Forbidden"), { status: 403 });
+    throw Object.assign(new Error("Note not found"), { status: 403 });
 
   const deleted = await prisma.note.update({
     where: { id },
@@ -52,3 +52,18 @@ export const softDeleteNote = async (id: number, userId: number) => {
   });
   return toNoteResponse(deleted);
 };
+
+export const toggleNoteFavorite = async (id: number, userId: number) =>{
+  const note = await prisma.note.findUnique({where: {id}});
+
+  if(!note || note.isDeleted) throw Object.assign(new Error("Note not found"), {status: 404})
+
+  if(note.userId !== userId) throw Object.assign(new Error("Note not found"), {status: 403})
+
+  const updatedFavorith = await prisma.note.update({
+    where: {id},
+    data: { isFavorite: !note.isFavorite}
+  }) 
+
+  return toNoteResponse(updatedFavorith)
+}

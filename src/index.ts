@@ -49,7 +49,7 @@ const swaggerSpec = swaggerJsdoc({
 });
 
 app.use(express.json());
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/users", user);

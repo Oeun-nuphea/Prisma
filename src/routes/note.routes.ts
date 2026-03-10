@@ -146,4 +146,32 @@ router.patch(
  */
 router.patch("/one-user/:id/delete", authHandler, NoteController.deleteNote);
 
+/**
+ * @swagger
+ * /notes/one-user/{id}/favorite:
+ *   patch:
+ *     summary: Toggle a note's favorite status (must belong to the user)
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Note favorite status toggled successfully
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Note not found
+ */
+router.patch(
+  "/one-user/:id/favorite",
+  authHandler,
+  NoteController.toggleNoteFavorite,
+);
+
 export default router;
