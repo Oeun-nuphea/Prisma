@@ -27,17 +27,21 @@ model Note {
   user      User     @relation(fields: [userId], references: [id])
   isDeleted Boolean  @default(false)
   isFavorite Boolean @default(false)
+  shareToken String? @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
 
 model UserDevice {
   id        Int      @id @default(autoincrement())
+  ip        String?   
   broswer   String
   os        String
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
 }
 
 model Admin {
