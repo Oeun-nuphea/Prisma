@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as AdminController from "../controller/admin.controller";
 import { validate } from "../middlewares/validate";
 import { LoginAdminSchema } from "../schemas/admin.schema";
+import { adminHandler } from "../middlewares/admin-handle";
 
 const router = Router();
 
@@ -51,11 +52,17 @@ router.post("/login", validate(LoginAdminSchema), AdminController.loginAdmin);
  *   get:
  *     summary: Get all users (admin only)
  *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of all users
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden — not an admin
  */
-router.get("/users", AdminController.getUsers);
+router.get("/users", adminHandler, AdminController.getUsers);
 
 /**
  * @swagger
@@ -63,6 +70,8 @@ router.get("/users", AdminController.getUsers);
  *   get:
  *     summary: Get a single user by ID (admin only)
  *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -72,9 +81,13 @@ router.get("/users", AdminController.getUsers);
  *     responses:
  *       200:
  *         description: User data
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden — not an admin
  *       404:
  *         description: User not found
  */
-router.get("/users/:id", AdminController.getUserById);
+router.get("/users/:id", adminHandler, AdminController.getUserById);
 
 export default router;

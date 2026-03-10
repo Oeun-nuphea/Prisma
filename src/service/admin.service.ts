@@ -5,7 +5,6 @@ import { toAdminLoginResponse } from "../utils/mapper";
 import bcrypt from "bcryptjs";
 import { toUserResponse } from "../utils/mapper";
 
-
 /**
  * Login admin with email, password, and privateKey (validated against ADMIN_SECRET)
  */
@@ -37,13 +36,11 @@ export const loginAdmin = async ({
     userId: String(admin.id),
     name: admin.name,
     email: admin.email,
+    role: "admin",
   });
 
   return toAdminLoginResponse(admin, token);
 };
-
-
-
 
 /**
  * get all user information

@@ -35,10 +35,10 @@ const router = Router();
  *                 example: John Doe
  *               email:
  *                 type: string
- *                 example: john@example.com
+ *                 example: api1@gmail.com
  *               password:
  *                 type: string
- *                 example: secret123
+ *                 example: 123
  *     responses:
  *       201:
  *         description: User created successfully
@@ -111,10 +111,10 @@ router.patch("/:id/delete", UserController.deleteUser);
  *             properties:
  *               email:
  *                 type: string
- *                 example: john@example.com
+ *                 example: api1@gmail.com
  *               password:
  *                 type: string
- *                 example: secret123
+ *                 example: 123
  *     responses:
  *       200:
  *         description: Login successful, returns JWT token

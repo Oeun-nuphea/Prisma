@@ -8,6 +8,7 @@ type UserData = {
   userId: string;
   name: string;
   email: string;
+  role?: string;
 };
 
 const getJwtSecret = () => {
@@ -18,10 +19,10 @@ const getJwtSecret = () => {
   return JWT_TOKEN;
 };
 
-export const signToken = ({ userId, email, name }: UserData) =>
-  jwt.sign({ userId, email, name }, getJwtSecret(), {
+export const signToken = ({ userId, email, name, role }: UserData) =>
+  jwt.sign({ userId, email, name, role }, getJwtSecret(), {
     expiresIn: JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"],
   });
 
 export const verifyToken = (token: string) =>
-  jwt.verify(token, getJwtSecret()) as { userId: string };
+  jwt.verify(token, getJwtSecret()) as { userId: string; role?: string };
