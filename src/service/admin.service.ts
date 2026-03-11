@@ -176,3 +176,16 @@ export const toggleUserActive = async (id: number) => {
   });
   return toUserResponseWithStatus(updated);
 };
+
+/**
+ * Admin
+ */
+export const logoutAdmin = async (adminId: number) =>{
+  await prisma.admin.update({
+    where: {id: adminId},
+    data: {
+      refreshTokenHash: null,
+      refreshTokenExpiresAt: null
+    }
+  })
+}

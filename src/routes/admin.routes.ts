@@ -176,4 +176,23 @@ router.patch(
   AdminController.toggleUserActive,
 );
 
+/**
+ * @swagger
+ * /admin/logout:
+ *   post:
+ *     summary: Logout the admin account 
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Clears the refresh token cookie and invalidate the session
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Permission denied
+ */
+router.post("/logout", csrfGuard, adminHandler, AdminController.logout);
+
 export default router;
