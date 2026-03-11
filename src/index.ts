@@ -1,19 +1,20 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express, { Application } from "express";
+import cors from "cors";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
+
 import user from "./routes/user.routes";
 import note from "./routes/note.routes";
 import admin from "./routes/admin.routes";
-import helmet from "helmet";
-import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
-import swaggerUi from "swagger-ui-express";
-import swaggerJsdoc from "swagger-jsdoc";
-import rateLimit from "express-rate-limit";
-import cors from "cors";
 
-dotenv.config();
-
-const app: Application = express();
-app.set("trust proxy", 1);
+// ─── Config ───────────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 4000;
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -22,25 +23,22 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean) as string[];
 
-const limiter = rateLimit({
+// ─── App ──────────────────────────────────────────────────────────────────────
+const app: Application = express();
+app.set("trust proxy", 1);
+
+// ─── Middleware ───────────────────────────────────────────────────────────────
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(rateLimit({
   windowMs: 5 * 60 * 1000,
   limit: 1000,
   message: { message: "Too many requests, please try again later." },
-});
-
-app.use(limiter);
-
-const PORT = process.env.PORT || 4000;
+}));
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-);
 app.use(helmet({ contentSecurityPolicy: false }));
+app.use(express.json());
 
-// ─── Swagger Setup ────────────────────────────────────────────────────────────
+// ─── Swagger ──────────────────────────────────────────────────────────────────
 const swaggerSpec = swaggerJsdoc({
   definition: {
     openapi: "3.0.0",
@@ -51,7 +49,7 @@ const swaggerSpec = swaggerJsdoc({
     },
     servers: [
       { url: `http://localhost:${PORT}` },
-      { url: `https://unclaimed-penni-noncalcareous.ngrok-free.dev`}
+      { url: "https://unclaimed-penni-noncalcareous.ngrok-free.dev" },
     ],
     components: {
       securitySchemes: {
@@ -67,19 +65,15 @@ const swaggerSpec = swaggerJsdoc({
   apis: ["./src/routes/*.ts"],
 });
 
-// Encoded as a data URI — no static file or customHtml needed
 const swaggerAutofillScript = Buffer.from(`
 (function () {
   const _fetch = window.fetch;
-
   window.fetch = async function (...args) {
     const response = await _fetch.apply(this, args);
     const clone = response.clone();
-
     try {
       const body = await clone.json();
       if (body?.accessToken) {
-        // Poll until swagger UI is ready, then authorize
         (function authorize() {
           if (window.ui) {
             window.ui.preauthorizeApiKey("bearerAuth", body.accessToken);
@@ -89,20 +83,16 @@ const swaggerAutofillScript = Buffer.from(`
         })();
       }
     } catch (_) {}
-
     return response;
   };
 })();
 `).toString("base64");
 
-app.use(express.json());
 app.use(
   "/api-docs",
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
+    swaggerOptions: { persistAuthorization: true },
     customSiteTitle: "Note API Docs",
     customJs: `data:text/javascript;base64,${swaggerAutofillScript}`,
   }),
@@ -115,6 +105,7 @@ app.use("/admin", admin);
 
 app.get("/", (_req, res) => res.json({ message: "Note is running" }));
 
+// ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(Number(PORT), "0.0.0.0", () =>
   console.log(
     `Server running at http://localhost:${PORT}\nSwagger docs: http://localhost:${PORT}/api-docs`,
