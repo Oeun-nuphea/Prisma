@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 const allowedOrigins: string[] = [
   "http://localhost:5173",
   "http://localhost:4000",
+  "https://unclaimed-penni-noncalcareous.ngrok-free.dev",
   process.env.FRONTEND_URL!,
 ].filter(Boolean);
 

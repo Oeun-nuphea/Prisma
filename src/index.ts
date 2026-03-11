@@ -35,7 +35,10 @@ const swaggerSpec = swaggerJsdoc({
       version: "1.0.0",
       description: "REST API for Note app with User and Admin management",
     },
-    servers: [{ url: `http://localhost:${PORT}` }],
+    servers: [
+      { url: `http://localhost:${PORT}` },
+      { url: `https://unclaimed-penni-noncalcareous.ngrok-free.dev`}
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {
