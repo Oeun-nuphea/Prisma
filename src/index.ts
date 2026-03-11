@@ -30,11 +30,13 @@ app.set("trust proxy", 1);
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({ origin: allowedOrigins, credentials: true }));
-app.use(rateLimit({
-  windowMs: 5 * 60 * 1000,
-  limit: 300,
-  message: { message: "Too many requests, please try again later." },
-}));
+app.use(
+  rateLimit({
+    windowMs: 5 * 60 * 1000,
+    limit: 300,
+    message: { message: "Too many requests, please try again later." },
+  }),
+);
 app.use(cookieParser());
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json());
@@ -49,9 +51,12 @@ const swaggerSpec = swaggerJsdoc({
       description: "REST API for Note app with User and Admin management",
     },
     servers: [
-      { url: `http://localhost:${PORT}` },
-      { url: `http://localhost` },
-      { url: "https://unclaimed-penni-noncalcareous.ngrok-free.dev" },
+      { url: "http://localhost", description: "Local (via Nginx)" }, // 👈 primary
+      { url: `http://localhost:${PORT}`, description: "Direct (dev only)" },
+      {
+        url: "https://unclaimed-penni-noncalcareous.ngrok-free.dev",
+        description: "Ngrok",
+      },
     ],
     components: {
       securitySchemes: {
@@ -67,7 +72,8 @@ const swaggerSpec = swaggerJsdoc({
   apis: ["./src/routes/*.ts"],
 });
 
-const swaggerAutofillScript = Buffer.from(`
+const swaggerAutofillScript = Buffer.from(
+  `
 (function () {
   const _fetch = window.fetch;
   window.fetch = async function (...args) {
@@ -88,7 +94,8 @@ const swaggerAutofillScript = Buffer.from(`
     return response;
   };
 })();
-`).toString("base64");
+`,
+).toString("base64");
 
 app.use(
   "/api-docs",
