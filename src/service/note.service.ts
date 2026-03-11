@@ -1,6 +1,7 @@
 import { prisma } from "../config/db";
 import { CreateNoteDto, UpdateNoteDto } from "../dto/note.dto";
 import { toNoteResponse, toNoteListResponse } from "../utils/mapper";
+import { randomBytes } from "crypto";
 
 export const getAllNoteOfUser = async (userId: number) => {
   const notes = await prisma.note.findMany({
@@ -68,8 +69,31 @@ export const toggleNoteFavorite = async (id: number, userId: number) =>{
   return toNoteResponse(updatedFavorith)
 }
 
-export const shareNote = async () =>{
-  const note = await prisma.note.findUnique({where: {id}});
-  
-  
-}
+export const shareNote = async (id: number, userId: number) => {
+  const note = await prisma.note.findUnique({ where: { id } });
+
+  if (!note || note.isDeleted)
+    throw Object.assign(new Error("Note not found"), { status: 404 });
+  if (note.userId !== userId)
+    throw Object.assign(new Error("Forbidden"), { status: 403 });
+
+  const shareToken = note.shareToken ?? randomBytes(32).toString("hex");
+
+  const updated = await prisma.note.update({
+    where: { id },
+    data: { shareToken },
+  });
+
+  return { shareToken: updated.shareToken };
+};
+
+export const getNoteByShareToken = async (token: string) => {
+  const note = await prisma.note.findUnique({
+    where: { shareToken: token },
+  });
+
+  if (!note || note.isDeleted)
+    throw Object.assign(new Error("Note not found"), { status: 404 });
+
+  return toNoteResponse(note);
+};

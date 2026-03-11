@@ -181,5 +181,62 @@ router.patch(
   authHandler,
   NoteController.toggleNoteFavorite,
 );
+/**
+ * @swagger
+ * /notes/one-user/{id}/share:
+ *   post:
+ *     summary: Generate a shareable link for a note (must belong to the user)
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Share URL generated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 shareUrl:
+ *                   type: string
+ *                   example: http://localhost:4000/notes/shared/abc123token
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Note not found
+ */
+router.post(
+  "/one-user/:id/share",
+  csrfGuard,
+  authHandler,
+  NoteController.shareNoteHandler,
+);
+
+/**
+ * @swagger
+ * /notes/shared/{token}:
+ *   get:
+ *     summary: View a shared note by token (no auth required)
+ *     tags: [Notes]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique share token
+ *     responses:
+ *       200:
+ *         description: Note data
+ *       404:
+ *         description: Note not found or deleted
+ */
+router.get("/shared/:token", NoteController.getNoteByTokenHandler);
 
 export default router;
