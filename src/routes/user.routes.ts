@@ -1,12 +1,13 @@
 import { Router } from "express";
 import * as UserController from "../controller/user.controller";
 import { validate } from "../middlewares/validate";
-import { authHandler } from "../middlewares/auth-handler";
+import { authHandler } from "../middlewares/auth-handler.middleware";
 import {
   CreateUserSchema,
   UpdateUserSchema,
   LoginUserSchema,
 } from "../schemas/user.schema";
+import { csrfGuard } from "../middlewares/csrf.middleware";
 
 const router = Router();
 
@@ -46,7 +47,12 @@ const router = Router();
  *       409:
  *         description: Email already exists
  */
-router.post("/", validate(CreateUserSchema), UserController.createUser);
+router.post(
+  "/",
+  csrfGuard,
+  validate(CreateUserSchema),
+  UserController.createUser,
+);
 
 /**
  * @swagger
@@ -76,7 +82,7 @@ router.post("/", validate(CreateUserSchema), UserController.createUser);
  *       404:
  *         description: User not found
  */
-router.delete("/:id", authHandler, UserController.deleteUser);
+router.delete("/:id", csrfGuard, authHandler, UserController.deleteUser);
 
 /**
  * @swagger
@@ -105,7 +111,12 @@ router.delete("/:id", authHandler, UserController.deleteUser);
  *       401:
  *         description: Invalid credentials
  */
-router.post("/login", validate(LoginUserSchema), UserController.loginUser);
+router.post(
+  "/login",
+  csrfGuard,
+  validate(LoginUserSchema),
+  UserController.loginUser,
+);
 
 /**
  * @swagger
@@ -130,6 +141,6 @@ router.post("/login", validate(LoginUserSchema), UserController.loginUser);
  *       403:
  *         description: Account deactivated
  */
-router.post("/refresh", UserController.refreshToken);
+router.post("/refresh", csrfGuard, UserController.refreshToken);
 
 export default router;

@@ -10,13 +10,17 @@ export const loginAdmin = async (req: Request, res: Response) => {
   try {
     const dto: LoginAdminDto = req.body;
     const result = await AdminService.loginAdmin(dto);
-    res.cookie("refreshToken", result.refreshToken, {
+
+    const { refreshToken, ...safeResult } = result; // strip refreshToken out
+
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.status(200).json(result);
+
+    res.status(200).json(safeResult); // ✅ only accessToken + admin data
   } catch (err: any) {
     res
       .status(err.status ?? 500)

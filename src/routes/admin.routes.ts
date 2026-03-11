@@ -2,7 +2,8 @@ import { Router } from "express";
 import * as AdminController from "../controller/admin.controller";
 import { validate } from "../middlewares/validate";
 import { LoginAdminSchema } from "../schemas/admin.schema";
-import { adminHandler } from "../middlewares/admin-handle";
+import { adminHandler } from "../middlewares/role.middleware";
+import { csrfGuard } from "../middlewares/csrf.middleware";
 
 const router = Router();
 
@@ -45,7 +46,7 @@ const router = Router();
  *       403:
  *         description: Invalid private key
  */
-router.post("/login", validate(LoginAdminSchema), AdminController.loginAdmin);
+router.post("/login", csrfGuard, validate(LoginAdminSchema), AdminController.loginAdmin);
 
 /**
  * @swagger
@@ -62,7 +63,7 @@ router.post("/login", validate(LoginAdminSchema), AdminController.loginAdmin);
  *       403:
  *         description: Forbidden — not an admin
  */
-router.post("/refresh", AdminController.refreshToken);
+router.post("/refresh", csrfGuard, AdminController.refreshToken);
 
 /**
  * @swagger
@@ -170,6 +171,7 @@ router.get("/users/:id", adminHandler, AdminController.getUserById);
  */
 router.patch(
   "/users/:id/active/toggle",
+  csrfGuard,
   adminHandler,
   AdminController.toggleUserActive,
 );

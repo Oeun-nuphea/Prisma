@@ -67,3 +67,9 @@ export const toggleNoteFavorite = async (id: number, userId: number) =>{
 
   return toNoteResponse(updatedFavorith)
 }
+
+export const shareNote = async () =>{
+  const note = await prisma.note.findUnique({where: {id}});
+  
+  
+}

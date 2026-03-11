@@ -1,8 +1,9 @@
 import { Router } from "express";
 import * as NoteController from "../controller/note.controller";
-import { authHandler } from "../middlewares/auth-handler";
+import { authHandler } from "../middlewares/auth-handler.middleware";
 import { validate } from "../middlewares/validate";
 import { CreateNoteSchema, UpdateNoteSchema } from "../schemas/note.schema";
+import { csrfGuard } from "../middlewares/csrf.middleware";
 
 const router = Router();
 
@@ -43,6 +44,7 @@ const router = Router();
  */
 router.post(
   "/",
+  csrfGuard,
   authHandler,
   validate(CreateNoteSchema),
   NoteController.createNote,
@@ -144,7 +146,12 @@ router.patch(
  *       404:
  *         description: Note not found
  */
-router.patch("/one-user/:id/delete", authHandler, NoteController.deleteNote);
+router.patch(
+  "/one-user/:id/delete",
+  csrfGuard,
+  authHandler,
+  NoteController.deleteNote,
+);
 
 /**
  * @swagger
@@ -170,6 +177,7 @@ router.patch("/one-user/:id/delete", authHandler, NoteController.deleteNote);
  */
 router.patch(
   "/one-user/:id/favorite",
+  csrfGuard,
   authHandler,
   NoteController.toggleNoteFavorite,
 );

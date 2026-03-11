@@ -2,7 +2,6 @@ import express, { Application } from "express";
 import user from "./routes/user.routes";
 import note from "./routes/note.routes";
 import admin from "./routes/admin.routes";
-import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
@@ -24,7 +23,6 @@ const limiter = rateLimit({
 app.use(limiter);
 
 const PORT = process.env.PORT || 4000;
-app.use(cors({ origin: true, credentials: true }));
 app.use(cookieParser());
 app.use(helmet({ contentSecurityPolicy: false }));
 
