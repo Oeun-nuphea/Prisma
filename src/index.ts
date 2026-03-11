@@ -49,6 +49,7 @@ const swaggerSpec = swaggerJsdoc({
     },
     servers: [
       { url: `http://localhost:${PORT}` },
+      { url: `http://localhost` },
       { url: "https://unclaimed-penni-noncalcareous.ngrok-free.dev" },
     ],
     components: {
