@@ -31,7 +31,7 @@ app.set("trust proxy", 1);
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(rateLimit({
   windowMs: 5 * 60 * 1000,
-  limit: 1000,
+  limit: 300,
   message: { message: "Too many requests, please try again later." },
 }));
 app.use(cookieParser());
