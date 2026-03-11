@@ -33,7 +33,7 @@ app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(
   rateLimit({
     windowMs: 5 * 60 * 1000,
-    limit: 300,
+    limit: 1000,
     message: { message: "Too many requests, please try again later." },
   }),
 );

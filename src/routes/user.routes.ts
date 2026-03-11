@@ -26,6 +26,7 @@ const router = Router();
  *     tags: [Users]
  *     requestBody:
  *       required: true
+ *       security: []
  *       content:
  *         application/json:
  *           schema:
