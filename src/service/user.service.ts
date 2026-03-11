@@ -156,3 +156,13 @@ export const refreshTokens = async (token: string) => {
 
   return tokens;
 };
+
+export const logoutUser = async (userId: number) => {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      refreshTokenHash: null,
+      refreshTokenExpiresAt: null,
+    },
+  });
+};

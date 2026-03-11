@@ -99,3 +99,24 @@ export const refreshToken = async (req: Request, res: Response) => {
       .json({ message: err.message ?? "Internal Server Error" });
   }
 };
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as Request & { userId?: number }).userId ?? Number(req.body?.userId);
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    await UserService.logoutUser(userId);
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (err: any) {
+    res
+      .status(err.status ?? 500)
+      .json({ message: err.message ?? "Internal Server Error" });
+  }
+};

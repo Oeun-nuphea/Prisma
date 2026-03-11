@@ -54,35 +54,6 @@ router.post(
   UserController.createUser,
 );
 
-/**
- * @swagger
- * /users/{id}:
- *   delete:
- *     summary: Soft delete a user
- *     description: Permanently deactivates the authenticated user's account. Users can only delete their own account.
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: The ID of the user to delete
- *     responses:
- *       204:
- *         description: User successfully deleted
- *       400:
- *         description: Invalid ID
- *       401:
- *         description: Unauthorized – not authenticated
- *       403:
- *         description: Forbidden – cannot delete another user's account
- *       404:
- *         description: User not found
- */
-router.delete("/:id", csrfGuard, authHandler, UserController.deleteUser);
 
 /**
  * @swagger
@@ -142,5 +113,52 @@ router.post(
  *         description: Account deactivated
  */
 router.post("/refresh", csrfGuard, UserController.refreshToken);
+
+/**
+ * @swagger
+ * /users/logout:
+ *   post:
+ *     summary: Logout the authenticated user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Clears the refresh token cookie and invalidates the session.
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.post("/logout", csrfGuard, authHandler, UserController.logout);
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   delete:
+ *     summary: Soft delete a user
+ *     description: Permanently deactivates the authenticated user's account. Users can only delete their own account.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the user to delete
+ *     responses:
+ *       204:
+ *         description: User successfully deleted
+ *       400:
+ *         description: Invalid ID
+ *       401:
+ *         description: Unauthorized – not authenticated
+ *       403:
+ *         description: Forbidden – cannot delete another user's account
+ *       404:
+ *         description: User not found
+ */
+router.delete("/:id", csrfGuard, authHandler, UserController.deleteUser);
 
 export default router;
