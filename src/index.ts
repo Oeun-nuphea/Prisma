@@ -8,11 +8,19 @@ import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import rateLimit from "express-rate-limit";
+import cors from "cors";
 
 dotenv.config();
 
 const app: Application = express();
 app.set("trust proxy", 1);
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:4000",
+  "https://unclaimed-penni-noncalcareous.ngrok-free.dev",
+  process.env.FRONTEND_URL,
+].filter(Boolean) as string[];
 
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
@@ -24,6 +32,12 @@ app.use(limiter);
 
 const PORT = process.env.PORT || 4000;
 app.use(cookieParser());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
 app.use(helmet({ contentSecurityPolicy: false }));
 
 // ─── Swagger Setup ────────────────────────────────────────────────────────────
