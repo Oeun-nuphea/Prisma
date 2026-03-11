@@ -90,8 +90,6 @@ router.post(
   UserController.createUser,
 );
 
-
-
 /**
  * @swagger
  * /users/refresh:
