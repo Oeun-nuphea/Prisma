@@ -24,9 +24,9 @@ const router = Router();
  *   post:
  *     summary: Register a new user
  *     tags: [Users]
+ *     security: []
  *     requestBody:
  *       required: true
- *       security: []
  *       content:
  *         application/json:
  *           schema:
