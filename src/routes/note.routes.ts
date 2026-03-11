@@ -205,7 +205,7 @@ router.patch(
  *               properties:
  *                 shareUrl:
  *                   type: string
- *                   example: http://localhost:4000/notes/shared/abc123token
+ *                   example: http://localhost/notes/shared/abc123token
  *       403:
  *         description: Forbidden
  *       404:
