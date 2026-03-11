@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, response, Response } from "express";
 import * as NoteService from "../service/note.service";
 import { CreateNoteDto, UpdateNoteDto } from "../dto/note.dto";
 
@@ -134,6 +134,25 @@ export const getNoteByTokenHandler = async (
     const { token } = req.params;
     const note = await NoteService.getNoteByShareToken(token);
     res.status(200).json(note);
+  } catch (err: any) {
+    res
+      .status(err.status ?? 500)
+      .json({ message: err.message ?? "Internal Server Error" });
+  }
+};
+
+export const deleteNoteByTokenHandler = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const note = await NoteService.deleteNoteByShareToken(id, userId);
+    res.status(200).json({message: "Note share deleted"});
   } catch (err: any) {
     res
       .status(err.status ?? 500)

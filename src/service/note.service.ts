@@ -97,3 +97,19 @@ export const getNoteByShareToken = async (token: string) => {
 
   return toNoteResponse(note);
 };
+
+export const deleteNoteByShareToken = async (id: number, userId: number) => {
+  const note = await prisma.note.findUnique({ where: { id } });
+
+  if (!note || note.isDeleted)
+    throw Object.assign(new Error("Note not found"), { status: 404 });
+  
+  if(!note || note.shareToken === null) throw Object.assign(new Error("Share is not available"), {status: 403})
+
+  const udpated = await prisma.note.update({
+    where: {id},
+    data: {shareToken: null}
+  })
+  return toNoteResponse(udpated)
+
+}

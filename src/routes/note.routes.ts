@@ -239,4 +239,33 @@ router.post(
  */
 router.get("/shared/:token", NoteController.getNoteByTokenHandler);
 
+/**
+ * @swagger
+ * /notes/one-user/{id}/unshare:
+ *   patch:
+ *     summary: Revoke the shareable link for a note (must belong to the user)
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Note unshared successfully
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Note not found
+ */
+router.patch(
+  "/one-user/:id/unshare",
+  csrfGuard,
+  authHandler,
+  NoteController.deleteNoteByTokenHandler,
+);
+
 export default router;
