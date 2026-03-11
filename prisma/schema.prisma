@@ -3,7 +3,8 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 model User {
@@ -26,7 +27,7 @@ model User {
 model Note {
   id         Int      @id @default(autoincrement())
   title      String
-  body       String
+  body       Json     @default("[]") 
   userId     Int
   user       User     @relation(fields: [userId], references: [id])
   isDeleted  Boolean  @default(false)

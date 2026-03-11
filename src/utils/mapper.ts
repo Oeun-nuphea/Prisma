@@ -5,7 +5,7 @@ import {
   UserResponseWithStatusDto,
 } from "../dto/user.dto";
 import { AdminResponseDto, LoginAdminResponseDto } from "../dto/admin.dto";
-import { NoteResponseDto } from "../dto/note.dto";
+import { NoteResponseDto, Block } from "../dto/note.dto";
 
 // ─── User Mappers ─────────────────────────────────────────────────────────────
 
@@ -72,7 +72,7 @@ export const toAdminLoginResponse = (
 export const toNoteResponse = (note: Note): NoteResponseDto => ({
   id: note.id,
   title: note.title,
-  body: note.body,
+  body: note.body as unknown as Block[],
   isFavorite: note.isFavorite,
   createdAt: note.createdAt,
   updatedAt: note.updatedAt,
