@@ -20,7 +20,42 @@ const router = Router();
 
 /**
  * @swagger
- * /users:
+ * /users/login:
+ *   post:
+ *     summary: Login as a user
+ *     tags: [Users]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: api1@gmail.com
+ *               password:
+ *                 type: string
+ *                 example: 123
+ *     responses:
+ *       200:
+ *         description: Login successful, returns JWT token
+ *       401:
+ *         description: Invalid credentials
+ */
+
+router.post(
+  "/login",
+  csrfGuard,
+  validate(LoginUserSchema),
+  UserController.loginUser,
+);
+
+/**
+ * @swagger
+ * /users/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Users]
@@ -56,39 +91,6 @@ router.post(
 );
 
 
-/**
- * @swagger
- * /users/login:
- *   post:
- *     summary: Login as a user
- *     tags: [Users]
- *     security: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [email, password]
- *             properties:
- *               email:
- *                 type: string
- *                 example: api1@gmail.com
- *               password:
- *                 type: string
- *                 example: 123
- *     responses:
- *       200:
- *         description: Login successful, returns JWT token
- *       401:
- *         description: Invalid credentials
- */
-router.post(
-  "/login",
-  csrfGuard,
-  validate(LoginUserSchema),
-  UserController.loginUser,
-);
 
 /**
  * @swagger
