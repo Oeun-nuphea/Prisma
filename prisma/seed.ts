@@ -10,7 +10,7 @@ const adapter = new PrismaPg({ connectionString: databaseUrl });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const email = "admin@example.com";
+  const email = "oeunnuphea@gmail.com";
   const password = "admin1234";
   const name = "Super Admin";
 
