@@ -8,6 +8,9 @@ import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
+import morgan from "morgan";
+import promBundle from "express-prom-bundle";
+
 
 import user from "./routes/user.routes";
 import note from "./routes/note.routes";
@@ -39,7 +42,29 @@ app.use(
 );
 app.use(cookieParser());
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(express.json());
+app.use(express.json({limit: "1mb"}));
+
+// ─── Morgan Logging ──────────────────────────────────────────────────────────
+if (process.env.NODE_ENV !== "production") {
+  // 'dev' format is concise & color-coded for development
+  app.use(morgan("dev"));
+} else {
+  // 'combined' format is better for production logs
+  app.use(morgan("combined"));
+}
+
+
+// ─── Monitoring / Metrics ─────────────────────────────────────────────────────
+const metricsMiddleware = promBundle({
+  includeMethod: true,
+  includePath: true,
+  includeStatusCode: true,
+  normalizePath: (req) => req.path.replace(/\/+$/, ''),
+  metricsPath: "/metrics",
+  promClient: { collectDefaultMetrics: {} },
+});
+
+app.use(metricsMiddleware);
 
 // ─── Swagger ──────────────────────────────────────────────────────────────────
 const swaggerSpec = swaggerJsdoc({
