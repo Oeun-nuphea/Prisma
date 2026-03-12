@@ -50,7 +50,7 @@ app.use(
 );app.use(express.json({limit: "5mb"}));
 
 // ─── Clean Respone ──────────────────────────────────────────────────────────
-// app.use(sanitizeRequest);
+app.use(sanitizeRequest);
 
 
 // ─── Morgan Logging ──────────────────────────────────────────────────────────
