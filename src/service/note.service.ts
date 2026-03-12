@@ -21,7 +21,7 @@ export const getNoteById = async (id: number, userId: number) => {
   if (!note || note.isDeleted)
     throw Object.assign(new Error("Note not found"), { status: 404 });
   if (note.userId !== userId)
-    throw Object.assign(new Error("Forbidden"), { status: 403 });
+    throw Object.assign(new Error("Note not found"), { status: 404 });
   return toNoteResponse(note);
 };
 
@@ -34,7 +34,7 @@ export const updateNote = async (
   if (!note || note.isDeleted)
     throw Object.assign(new Error("Note not found"), { status: 404 });
   if (note.userId !== userId)
-    throw Object.assign(new Error("Forbidden"), { status: 403 });
+    throw Object.assign(new Error("Note not found"), { status: 404 });
 
   const updated = await prisma.note.update({ where: { id }, data });
   return toNoteResponse(updated);
@@ -45,7 +45,7 @@ export const softDeleteNote = async (id: number, userId: number) => {
   if (!note || note.isDeleted)
     throw Object.assign(new Error("Note not found"), { status: 404 });
   if (note.userId !== userId)
-    throw Object.assign(new Error("Note not found"), { status: 403 });
+    throw Object.assign(new Error("Note not found"), { status: 404 });
 
   const deleted = await prisma.note.update({
     where: { id },
@@ -59,7 +59,7 @@ export const toggleNoteFavorite = async (id: number, userId: number) =>{
 
   if(!note || note.isDeleted) throw Object.assign(new Error("Note not found"), {status: 404})
 
-  if(note.userId !== userId) throw Object.assign(new Error("Note not found"), {status: 403})
+  if(note.userId !== userId) throw Object.assign(new Error("Note not found"), {status: 404})
 
   const updatedFavorith = await prisma.note.update({
     where: {id},
@@ -75,7 +75,7 @@ export const shareNote = async (id: number, userId: number) => {
   if (!note || note.isDeleted)
     throw Object.assign(new Error("Note not found"), { status: 404 });
   if (note.userId !== userId)
-    throw Object.assign(new Error("Forbidden"), { status: 403 });
+    throw Object.assign(new Error("Note not found"), { status: 404 });
 
   const shareToken = note.shareToken ?? randomBytes(32).toString("hex");
 
