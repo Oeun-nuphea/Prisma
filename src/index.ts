@@ -142,6 +142,6 @@ app.get("/", (_req, res) => res.json({ message: "Note is running" }));
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(Number(PORT), "0.0.0.0", () =>
   console.log(
-    `Server running at http://localhost:${PORT}\nSwagger docs: http://localhost:${PORT}/api-docs`,
+    `Server running at http://localhost:${PORT}\nSwagger docs: http://localhost/api-docs`,
   ),
 );
