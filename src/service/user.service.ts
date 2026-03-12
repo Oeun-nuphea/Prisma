@@ -35,7 +35,7 @@ export const createUser = async (data: CreateUserDto) => {
 };
 
 export const loginUser = async ({ email, password }: LoginUserDto) => {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ where: { email, isDeleted: false} });
 
   if (!user || !user.password) throw new Error("Invalid email or password");
 
