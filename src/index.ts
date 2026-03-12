@@ -11,6 +11,8 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import morgan from "morgan";
 import promBundle from "express-prom-bundle";
+import xss from 'xss-clean';
+
 
 
 import user from "./routes/user.routes";
@@ -47,6 +49,9 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );app.use(express.json({limit: "5mb"}));
+
+// ─── XSS Protection Middleware ────────────────────────────────────────────────
+app.use(xss());
 
 // ─── Morgan Logging ──────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== "production") {
