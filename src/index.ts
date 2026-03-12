@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express, { Application } from "express";
+import { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -43,6 +44,17 @@ app.use(
 app.use(cookieParser());
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({limit: "1mb"}));
+
+// ─── Error Handler ────────────────────────────────────────────────────────────
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({ message: "Payload too large. Maximum size is 1mb." });
+  }
+
+  const status = err.status ?? err.statusCode ?? 500;
+  const message = err.message ?? "Internal Server Error";
+  return res.status(status).json({ message });
+});
 
 // ─── Morgan Logging ──────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== "production") {
