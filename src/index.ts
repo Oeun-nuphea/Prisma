@@ -45,17 +45,6 @@ app.use(cookieParser());
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({limit: "1mb"}));
 
-// ─── Error Handler ────────────────────────────────────────────────────────────
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  if (err.type === "entity.too.large") {
-    return res.status(413).json({ message: "Payload too large. Maximum size is 1mb." });
-  }
-
-  const status = err.status ?? err.statusCode ?? 500;
-  const message = err.message ?? "Internal Server Error";
-  return res.status(status).json({ message });
-});
-
 // ─── Morgan Logging ──────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== "production") {
   // 'dev' format is concise & color-coded for development
@@ -149,7 +138,16 @@ app.use("/users", user);
 app.use("/notes", note);
 app.use("/admin", admin);
 
-app.get("/", (_req, res) => res.json({ message: "Note is running" }));
+
+// ─── Global Error Handler (MUST be last) ──────────────────────────────────────
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({ message: "Payload too large. Maximum size is 1mb." });
+  }
+  const status = err.status ?? err.statusCode ?? 500;
+  const message = err.message ?? "Internal Server Error";
+  return res.status(status).json({ message });
+});
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(Number(PORT), "0.0.0.0", () =>
