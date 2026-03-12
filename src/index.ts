@@ -11,8 +11,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import morgan from "morgan";
 import promBundle from "express-prom-bundle";
-import xss from 'xss-clean';
-
+import sanitizeRequest from './middlewares/xss-sanitize';
 
 
 import user from "./routes/user.routes";
@@ -50,8 +49,9 @@ app.use(
   })
 );app.use(express.json({limit: "5mb"}));
 
-// ─── XSS Protection Middleware ────────────────────────────────────────────────
-app.use(xss());
+// ─── Clean Respone ──────────────────────────────────────────────────────────
+app.use(sanitizeRequest);
+
 
 // ─── Morgan Logging ──────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== "production") {
