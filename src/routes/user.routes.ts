@@ -70,7 +70,7 @@ router.post(
  *             properties:
  *               name:
  *                 type: string
- *                 example: John Doe
+ *                 example: rom dol
  *               email:
  *                 type: string
  *                 example: api1@gmail.com
@@ -84,7 +84,7 @@ router.post(
  *         description: Email already exists
  */
 router.post(
-  "/",
+  "/register",
   csrfGuard,
   validate(CreateUserSchema),
   UserController.createUser,
