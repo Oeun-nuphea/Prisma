@@ -27,6 +27,7 @@ const allowedOrigins = [
   "http://localhost",
   "https://unclaimed-penni-noncalcareous.ngrok-free.dev",
   process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL_DE,
 ].filter(Boolean) as string[];
 
 // ─── App ──────────────────────────────────────────────────────────────────────
