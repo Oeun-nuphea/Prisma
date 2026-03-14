@@ -119,7 +119,18 @@ const swaggerAutofillScript = Buffer.from(
       if (body?.accessToken) {
         (function authorize() {
           if (window.ui) {
-            window.ui.preauthorizeApiKey("bearerAuth", body.accessToken);
+            // ✅ Use authActions.authorize for http bearer schemes
+            window.ui.authActions.authorize({
+              bearerAuth: {
+                name: "bearerAuth",
+                schema: {
+                  type: "http",
+                  scheme: "bearer",
+                  bearerFormat: "JWT",
+                },
+                value: body.accessToken,
+              },
+            });
           } else {
             setTimeout(authorize, 200);
           }
