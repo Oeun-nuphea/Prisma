@@ -3,11 +3,23 @@ import { CreateNoteDto, UpdateNoteDto } from "../dto/note.dto";
 import { toNoteResponse, toNoteListResponse } from "../utils/mapper";
 import { randomBytes } from "crypto";
 
-export const getAllNoteOfUser = async (userId: number) => {
-  const notes = await prisma.note.findMany({
-    where: { userId, isDeleted: false },
-  });
-  return toNoteListResponse(notes);
+export const getAllNoteOfUser = async (
+  userId: number,
+  page: number = 1,
+  limit: number = 10,
+  // includeDeleted: boolean = false,
+  // filters: { title?: string; body?: string } = {},
+) => {
+  // const notes = await prisma.note.findMany({
+  //   where: { userId, isDeleted: false },
+  // });
+  const [notes, meta] = await prisma.note
+    .paginate({ where: { userId, isDeleted: false } })
+    .withPages({ page, limit, includePageCount: true });
+  return {
+    data: toNoteListResponse(notes),
+    meta,
+  }
 };
 
 export const createNote = async (userId: number, data: CreateNoteDto) => {

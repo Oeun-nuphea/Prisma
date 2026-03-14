@@ -135,7 +135,7 @@ export const getAllUsers = async (
     where.name = { contains: filters.name, mode: "insensitive" };
   }
   if (filters.email) {
-    where.email = { contains: filters.email, mode: "insensitive" };
+    where.email = { contains: filters.email, mode: "insensitive" }; // mode mean support for all cases of char
   }
 
   const [users, meta] = await prisma.user

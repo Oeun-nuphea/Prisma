@@ -28,8 +28,17 @@ export const getNotesByOneUser = async (req: Request, res: Response) => {
     if (isNaN(userId)) return res.status(400).json({ message: "Invalid ID" });
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    const notes = await NoteService.getAllNoteOfUser(userId);
-    res.status(200).json(notes);
+    const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10),
+    );
+    
+    const result = await NoteService.getAllNoteOfUser(userId, page, limit);
+    res.status(200).json(result);
+
+    // const notes = await NoteService.getAllNoteOfUser(userId);
+    // res.status(200).json(notes);
   } catch (err: any) {
     res.status(err.status ?? 500).json({
       message: err.message ?? "Internal Server Error",

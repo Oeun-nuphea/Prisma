@@ -56,6 +56,19 @@ router.post(
  *   get:
  *     summary: Get all notes for the authenticated user
  *     tags: [Notes]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema: 
+ *           type: integer
+ *           default: 10
+ *         description: Items per page (Max 100) 
  *     security:
  *       - bearerAuth: []
  *     responses:
