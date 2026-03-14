@@ -107,8 +107,8 @@ const swaggerSpec = swaggerJsdoc({
   apis: ["./src/routes/*.ts"],
 });
 
-const swaggerAutofillScript = Buffer.from(
-  `
+// ─── Swagger autofill script (served as a real JS file) ───────────────────
+const swaggerAutofillScript = `
 (function () {
   const _fetch = window.fetch;
   window.fetch = async function (...args) {
@@ -119,15 +119,10 @@ const swaggerAutofillScript = Buffer.from(
       if (body?.accessToken) {
         (function authorize() {
           if (window.ui) {
-            // ✅ Use authActions.authorize for http bearer schemes
             window.ui.authActions.authorize({
               bearerAuth: {
                 name: "bearerAuth",
-                schema: {
-                  type: "http",
-                  scheme: "bearer",
-                  bearerFormat: "JWT",
-                },
+                schema: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
                 value: body.accessToken,
               },
             });
@@ -140,8 +135,13 @@ const swaggerAutofillScript = Buffer.from(
     return response;
   };
 })();
-`,
-).toString("base64");
+`;
+
+// Expose it as a real JS file ← key fix
+app.get("/swagger-autofill.js", (_req, res) => {
+  res.setHeader("Content-Type", "application/javascript");
+  res.send(swaggerAutofillScript);
+});
 
 app.use(
   "/api-docs",
@@ -149,7 +149,7 @@ app.use(
   swaggerUi.setup(swaggerSpec, {
     swaggerOptions: { persistAuthorization: true },
     customSiteTitle: "Note API Docs",
-    customJs: `data:text/javascript;base64,${swaggerAutofillScript}`,
+    customJs: "/swagger-autofill.js", // ← point to the real file
   }),
 );
 
