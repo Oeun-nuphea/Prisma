@@ -53,3 +53,7 @@ npm run prisma:migrate
 
 # seed admin
 npm run prisma:seed
+
+
+# prevent prisma reapply
+prisma migrate resolve --applied

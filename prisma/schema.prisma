@@ -1,63 +1,62 @@
-datasource db {
-  provider = "postgresql"
-}
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  isActive  Boolean  @default(true)
-  role      String   @default("user")
-  refreshTokenHash      String?
-  refreshTokenExpiresAt DateTime?
+datasource db {
+  provider = "postgresql"
+}
 
-  notes       Note[]
-  userDevices UserDevice[]
+model User {
+  id                    Int          @id @default(autoincrement())
+  name                  String
+  email                 String       @unique
+  password              String
+  isDeleted             Boolean      @default(false)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @default(now()) @updatedAt
+  isActive              Boolean      @default(true)
+  role                  String       @default("user")
+  refreshTokenExpiresAt DateTime?
+  refreshTokenHash      String?
+  notes                 Note[]
+  userDevices           UserDevice[]
 }
 
 model Note {
   id         Int      @id @default(autoincrement())
-  title      String
-  body       Json     @default("[]") 
+  title      String   @db.VarChar(50)
   userId     Int
-  user       User     @relation(fields: [userId], references: [id])
   isDeleted  Boolean  @default(false)
-  isFavorite Boolean  @default(false)
-  shareToken String?  @unique
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
+  isFavorite Boolean  @default(false)
+  shareToken String?  @unique
+  body       Json     @default("[]")
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 model UserDevice {
   id        Int      @id @default(autoincrement())
-  ip        String?
   broswer   String
   os        String
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
   isDeleted Boolean  @default(false)
+  ip        String?
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Admin {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  role      String   @default("admin")
-  password  String
-  private   String
-  isDeleted Boolean  @default(false)
-  refreshTokenHash      String?
+  id                    Int       @id @default(autoincrement())
+  name                  String
+  email                 String    @unique
+  role                  String    @default("admin")
+  password              String
+  isDeleted             Boolean   @default(false)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @default(now()) @updatedAt
+  private               String
   refreshTokenExpiresAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  refreshTokenHash      String?
 }
