@@ -12,6 +12,7 @@ export const getAllNoteOfUser = async (userId: number) => {
 
 export const createNote = async (userId: number, data: CreateNoteDto) => {
   const { title, body } = data;
+  if(title.length > 51) throw new Error("Title is limited to 50 characters")
   const note = await prisma.note.create({ data: { userId, title, body } });
   return toNoteResponse(note);
 };
