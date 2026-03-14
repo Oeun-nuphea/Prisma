@@ -38,7 +38,7 @@ export const updateNote = async (
     throw Object.assign(new Error("Note not found"), { status: 404 });
 
   if (data.title) {
-    if(data.title.length > 50) throw new Error("Title is limited to 50 charactersvvvvvvvvvvvvvvvvvvvv")
+    if(data.title.length > 50) throw new Error("Title is limited to 50 characters")
   }
 
   const updated = await prisma.note.update({ where: { id }, data });
