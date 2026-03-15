@@ -73,7 +73,17 @@ export const toAdminLoginResponse = (
 // ─── Note Mappers ─────────────────────────────────────────────────────────────
 
 export const toNoteResponse = (note: Note): NoteResponseDto => {
-  const body = (note.body as unknown as Block[]).map((block) => {
+  // 👇 body might be a string "[]" from old records — parse it safely
+  let rawBody = note.body;
+  if (typeof rawBody === "string") {
+    try {
+      rawBody = JSON.parse(rawBody);
+    } catch {
+      rawBody = [];
+    }
+  }
+
+  const body = (Array.isArray(rawBody) ? rawBody as unknown as Block[] : []).map((block) => {
     if (block.type === "image" && block.filePath) {
       return {
         ...block,

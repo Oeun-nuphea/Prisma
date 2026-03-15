@@ -88,8 +88,8 @@ const swaggerSpec = swaggerJsdoc({
       description: "REST API for Note app with User and Admin management",
     },
     servers: [
-      { url: "http://localhost", description: "Local (via Nginx)" }, // 👈 primary
       { url: `http://localhost:${PORT}`, description: "Direct (dev only)" },
+      { url: "http://localhost", description: "Local (via Nginx)" }, // 👈 primary
       {
         url: "https://unclaimed-penni-noncalcareous.ngrok-free.dev",
         description: "Ngrok",

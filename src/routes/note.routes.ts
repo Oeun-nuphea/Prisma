@@ -34,21 +34,39 @@ const router = Router();
  *                 type: string
  *                 example: My Note
  *               body:
- *                 type: string
- *                 example: This is the content
+ *                 type: array        # 👈 was string
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     type:
+ *                       type: string
+ *                       enum: [paragraph, heading1, heading2, bullet, todo, code, image]
+ *                     content:
+ *                       type: string
+ *                     checked:
+ *                       type: boolean
+ *                     filePath:
+ *                       type: string
+ *                     fileId:
+ *                       type: string
+ *                     url:
+ *                       type: string
+ *                 example:
+ *                   - id: "1"
+ *                     type: paragraph
+ *                     content: "Hello world"
+ *               isFavorite:
+ *                 type: boolean
+ *                 default: false
  *     responses:
  *       201:
  *         description: Note created
  *       401:
  *         description: Unauthorized
  */
-router.post(
-  "/",
-  csrfGuard,
-  authHandler,
-  validate(CreateNoteSchema),
-  NoteController.createNote,
-);
+router.post("/", csrfGuard, authHandler, validate(CreateNoteSchema), NoteController.createNote);
 
 /**
  * @swagger
@@ -82,24 +100,6 @@ router.get("/one-user", authHandler, NoteController.getNotesByOneUser);
 /**
  * @swagger
  * /notes/one-user/{id}:
- *   get:
- *     summary: Get a single note by ID (must belong to the user)
- *     tags: [Notes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Note data
- *       403:
- *         description: Forbidden — note belongs to another user
- *       404:
- *         description: Note not found
  *   patch:
  *     summary: Update a note by ID (must belong to the user)
  *     tags: [Notes]
@@ -120,7 +120,25 @@ router.get("/one-user", authHandler, NoteController.getNotesByOneUser);
  *               title:
  *                 type: string
  *               body:
- *                 type: string
+ *                 type: array        # 👈 was string
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     type:
+ *                       type: string
+ *                       enum: [paragraph, heading1, heading2, bullet, todo, code, image]
+ *                     content:
+ *                       type: string
+ *                     filePath:
+ *                       type: string
+ *                     fileId:
+ *                       type: string
+ *                     url:
+ *                       type: string
+ *               isFavorite:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Note updated
@@ -136,6 +154,30 @@ router.patch(
   validate(UpdateNoteSchema),
   NoteController.updateNote,
 );
+
+/**
+ * @swagger
+ * /notes/one-user/{id}:
+ *   get:
+ *     summary: Get a single note by ID (must belong to the user)
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Note data
+ *       403:
+ *         description: Forbidden — note belongs to another user
+ *       404:
+ *         description: Note not found
+ */
+router.get("/one-user/:id", authHandler, NoteController.getNoteById);
 
 /**
  * @swagger

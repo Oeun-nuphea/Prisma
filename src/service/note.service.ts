@@ -32,7 +32,14 @@ class NoteService {
       .paginate({ where: { userId, isDeleted: false } })
       .withPages({ page, limit, includePageCount: true });
 
-    return { data: toNoteListResponse(notes), meta };
+    return {
+    data: toNoteListResponse(notes),
+    meta: {
+      ...meta,
+      // 👇 ensure hasNextPage is always present so frontend can stop fetching
+      hasNextPage: meta.currentPage < meta.pageCount,
+    },
+  };
   }
 
   async createNote(userId: number, data: CreateNoteDto) {
