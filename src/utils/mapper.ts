@@ -16,6 +16,9 @@ export const toUserResponse = (user: User): UserResponseDto => ({
   id: user.id,
   name: user.name,
   email: user.email,
+  avatarUrl: user.avatarUrl
+    ? `${process.env.IMAGEKIT_URL_ENDPOINT}${user.avatarUrl}`
+    : null,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
@@ -41,6 +44,9 @@ export const toUserResponseWithStatus = (
   name: user.name,
   email: user.email,
   isActive: user.isActive,
+  avatarUrl: user.avatarUrl
+    ? `${process.env.IMAGEKIT_URL_ENDPOINT}${user.avatarUrl}`
+    : null,
 });
 
 /**

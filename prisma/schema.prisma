@@ -10,6 +10,8 @@ datasource db {
 model User {
   id                    Int          @id @default(autoincrement())
   name                  String
+  avatarUrl             String?
+  avatarFileId          String?
   email                 String       @unique
   password              String
   isDeleted             Boolean      @default(false)
@@ -50,6 +52,8 @@ model UserDevice {
 model Admin {
   id                    Int       @id @default(autoincrement())
   name                  String
+  avatarUrl             String?
+  avatarFileId          String?
   email                 String    @unique
   role                  String    @default("admin")
   password              String

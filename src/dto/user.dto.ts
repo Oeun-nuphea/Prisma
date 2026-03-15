@@ -16,12 +16,18 @@ export interface LoginUserDto {
   password: string;
 }
 
+export interface UpdateAvatarDto {
+  avatarUrl: string;    // path stored in DB e.g. /avatars/filename.jpg
+  avatarFileId: string; // ImageKit fileId for deletion
+}
+
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
 export interface UserResponseDto {
   id: number;
   name: string;
   email: string;
+  avatarUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,5 +41,6 @@ export interface UserResponseWithStatusDto {
   id: number;
   name: string;
   email: string;
+  avatarUrl: string | null;
   isActive: boolean;
 }

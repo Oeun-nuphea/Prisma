@@ -1,11 +1,32 @@
 import { prisma } from "../config/db";
-import { getTokenExpiryDate, signTokenPair, verifyRefreshToken } from "../config/jwt";
+import {
+  getTokenExpiryDate,
+  signTokenPair,
+  verifyRefreshToken,
+} from "../config/jwt";
 import { CreateUserDto, LoginUserDto } from "../dto/user.dto";
 import { toUserResponse, toLoginResponse } from "../utils/mapper";
 import bcrypt from "bcryptjs";
+import ImageKitService from "./imagekit.service";
 
 class UserService {
   // ─── Public ───────────────────────────────────────────────────────────────
+
+  async updateAvatar(userId: number, path: string, fileId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (user?.avatarFileId) {
+      await ImageKitService.deleteFile(user.avatarFileId);
+    }
+
+    return prisma.user.update({
+      where: { id: userId },
+      data: {
+        avatarUrl: path, // 👈 store /avatars/filename.jpg not full URL
+        avatarFileId: fileId,
+      },
+    });
+  }
 
   async createUser(data: CreateUserDto) {
     const { name, email, password } = data;
@@ -29,7 +50,9 @@ class UserService {
   }
 
   async loginUser({ email, password }: LoginUserDto) {
-    const user = await prisma.user.findUnique({ where: { email, isDeleted: false } });
+    const user = await prisma.user.findUnique({
+      where: { email, isDeleted: false },
+    });
 
     if (!user || !user.password) {
       throw { status: 401, message: "Invalid email or password" };
@@ -41,7 +64,10 @@ class UserService {
     }
 
     if (!user.isActive) {
-      throw { status: 403, message: "Your account has been deactivated. Please contact support." };
+      throw {
+        status: 403,
+        message: "Your account has been deactivated. Please contact support.",
+      };
     }
 
     const { accessToken, refreshToken } = signTokenPair({
@@ -67,7 +93,10 @@ class UserService {
     return { ...toLoginResponse(user, accessToken), refreshToken };
   }
 
-  async saveLoginDevice(userId: number, device: { browser: string; os: string; ip?: string }) {
+  async saveLoginDevice(
+    userId: number,
+    device: { browser: string; os: string; ip?: string },
+  ) {
     return prisma.userDevice.create({
       data: {
         userId,
@@ -96,7 +125,10 @@ class UserService {
         throw { status: 401, message: "Account not found" };
       }
       if (!user.isActive) {
-        throw { status: 403, message: "Your account has been deactivated. Please contact support." };
+        throw {
+          status: 403,
+          message: "Your account has been deactivated. Please contact support.",
+        };
       }
       if (!user.refreshTokenHash || !user.refreshTokenExpiresAt) {
         throw { status: 401, message: "Invalid or expired refresh token" };
@@ -138,7 +170,10 @@ class UserService {
 
   async softDeleteUser(id: number, requestingUserId: number) {
     if (requestingUserId !== id) {
-      throw { status: 403, message: "Unauthorized: You can only delete your own account" };
+      throw {
+        status: 403,
+        message: "Unauthorized: You can only delete your own account",
+      };
     }
 
     const user = await prisma.user.findUnique({ where: { id } });

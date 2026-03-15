@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import multer from "multer";
 import ImageKitService from "../service/imagekit.service";
+import UserService from "../service/user.service";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -14,22 +15,29 @@ class ImageKitController {
 
   uploadAvatar = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.file) {
+      if (!req.file)
         return res.status(400).json({ message: "No file uploaded" });
-      }
 
-      const { url, fileId } = await ImageKitService.uploadFile(req.file, "/avatars");
+      const { url, fileId, filePath } = await ImageKitService.uploadFile(
+        req.file,
+        "/avatars",
+      );
 
-      // TODO: save url + fileId to user record
-      // await UserService.updateAvatar(req.user!.id, url, fileId);
+      // ✅ filePath = /avatars/filename.jpg — only this goes to DB
+      await UserService.updateAvatar(req.user!.id, filePath, fileId);
 
+      // ✅ full URL returned to frontend for immediate display
       res.json({ url, fileId });
     } catch (err) {
       next(err);
     }
   };
 
-  uploadNoteImages = async (req: Request, res: Response, next: NextFunction) => {
+  uploadNoteImages = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
     try {
       const files = req.files as Express.Multer.File[];
 
@@ -38,7 +46,7 @@ class ImageKitController {
       }
 
       const results = await Promise.all(
-        files.map((file) => ImageKitService.uploadFile(file, "/notes"))
+        files.map((file) => ImageKitService.uploadFile(file, "/notes")),
       );
 
       // TODO: save results to note record

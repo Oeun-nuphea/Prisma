@@ -2,6 +2,7 @@ import { prisma } from "../config/db";
 import { CreateNoteDto, UpdateNoteDto } from "../dto/note.dto";
 import { toNoteResponse, toNoteListResponse } from "../utils/mapper";
 import { randomBytes } from "crypto";
+import ImageKitService from "./imagekit.service";
 
 class NoteService {
   // ─── Helper — reuse across methods ────────────────────────────────────────
@@ -9,10 +10,19 @@ class NoteService {
   private async findOwnedNote(id: number, userId: number) {
     const note = await prisma.note.findUnique({ where: { id } });
 
-    if (!note || note.isDeleted) throw { status: 404, message: "Note not found" };
-    if (note.userId !== userId) throw { status: 404, message: "Note not found" };
+    if (!note || note.isDeleted)
+      throw { status: 404, message: "Note not found" };
+    if (note.userId !== userId)
+      throw { status: 404, message: "Note not found" };
 
     return note;
+  }
+
+  private extractFileIds(body: unknown): string[] {
+    if (!Array.isArray(body)) return [];
+    return body
+      .filter((block: any) => block.type === "image" && block.fileId)
+      .map((block: any) => block.fileId);
   }
 
   // ─── CRUD ──────────────────────────────────────────────────────────────────
@@ -53,13 +63,20 @@ class NoteService {
   }
 
   async softDeleteNote(id: number, userId: number) {
-    await this.findOwnedNote(id, userId);
+    const note = await this.findOwnedNote(id, userId);
 
-    const deleted = await prisma.note.update({
+    // 👇 Clean up ImageKit before deleting
+    const fileIds = this.extractFileIds(note.body);
+    if (fileIds.length > 0) {
+      await Promise.all(
+        fileIds.map((fileId) => ImageKitService.deleteFile(fileId)),
+      );
+    }
+
+    return prisma.note.update({
       where: { id },
       data: { isDeleted: true },
     });
-    return toNoteResponse(deleted);
   }
 
   async toggleNoteFavorite(id: number, userId: number) {
