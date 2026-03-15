@@ -72,17 +72,27 @@ export const toAdminLoginResponse = (
 
 // ─── Note Mappers ─────────────────────────────────────────────────────────────
 
-/**
- * Strips internal fields (userId, isDeleted, timestamps) from a Note record.
- */
-export const toNoteResponse = (note: Note): NoteResponseDto => ({
-  id: note.id,
-  title: note.title,
-  body: note.body as unknown as Block[],
-  isFavorite: note.isFavorite,
-  createdAt: note.createdAt,
-  updatedAt: note.updatedAt,
-});
+export const toNoteResponse = (note: Note): NoteResponseDto => {
+  const body = (note.body as unknown as Block[]).map((block) => {
+    if (block.type === "image" && block.filePath) {
+      return {
+        ...block,
+        url: `${process.env.IMAGEKIT_URL_ENDPOINT}${block.filePath}`,
+      };
+    }
+    return block;
+  });
+
+  return {
+    id: note.id,
+    title: note.title,
+    body,
+    isFavorite: note.isFavorite,
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt,
+  };
+};
 
 export const toNoteListResponse = (notes: Note[]): NoteResponseDto[] =>
   notes.map(toNoteResponse);
+
