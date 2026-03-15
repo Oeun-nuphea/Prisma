@@ -1,168 +1,161 @@
 import { prisma } from "../config/db";
-import {
-  getTokenExpiryDate,
-  signTokenPair,
-  verifyRefreshToken,
-} from "../config/jwt";
-import { CreateUserDto, UpdateUserDto, LoginUserDto } from "../dto/user.dto";
+import { getTokenExpiryDate, signTokenPair, verifyRefreshToken } from "../config/jwt";
+import { CreateUserDto, LoginUserDto } from "../dto/user.dto";
 import { toUserResponse, toLoginResponse } from "../utils/mapper";
 import bcrypt from "bcryptjs";
 
-/**
- * Normal user for all below
- * @param data
- * @returns
- */
-export const createUser = async (data: CreateUserDto) => {
-  const { name, email, password } = data;
+class UserService {
+  // ─── Public ───────────────────────────────────────────────────────────────
 
-  if (!name || !email) {
-    throw { status: 400, message: "Email and Name are required" };
+  async createUser(data: CreateUserDto) {
+    const { name, email, password } = data;
+
+    if (!name || !email) {
+      throw { status: 400, message: "Email and Name are required" };
+    }
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      throw { status: 409, message: "Email already exists" };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: { name, email, password: hashedPassword },
+    });
+
+    return toUserResponse(user);
   }
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    throw { status: 409, message: "Email already exists" };
-  }
+  async loginUser({ email, password }: LoginUserDto) {
+    const user = await prisma.user.findUnique({ where: { email, isDeleted: false } });
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
+    if (!user || !user.password) {
+      throw { status: 401, message: "Invalid email or password" };
+    }
 
-  const user = await prisma.user.create({
-    data: { name, email, password: hashedPassword },
-  });
-  return toUserResponse(user);
-};
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw { status: 401, message: "Invalid email or password" };
+    }
 
-export const loginUser = async ({ email, password }: LoginUserDto) => {
-  const user = await prisma.user.findUnique({ where: { email, isDeleted: false} });
+    if (!user.isActive) {
+      throw { status: 403, message: "Your account has been deactivated. Please contact support." };
+    }
 
-  if (!user || !user.password) throw new Error("Invalid email or password");
-
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) throw new Error("Invalid email or password");
-
-  if (!user.isActive)
-    throw Object.assign(
-      new Error("Your account has been deactivated. Please contact support."),
-      { status: 403 },
-    );
-
-  const { accessToken, refreshToken } = signTokenPair({
-    userId: String(user.id),
-    name: user.name,
-    email: user.email,
-    role: "user",
-  });
-
-  const refreshTokenExpiresAt = getTokenExpiryDate(refreshToken);
-  if (!refreshTokenExpiresAt)
-    throw new Error("Failed to derive refresh token expiry");
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      refreshTokenHash: await bcrypt.hash(refreshToken, 10),
-      refreshTokenExpiresAt,
-    },
-  });
-
-  return { ...toLoginResponse(user, accessToken), refreshToken };
-};
-
-export const saveLoginDevice = (
-  userId: number,
-  device: { browser: string; os: string; ip?: string },
-) =>
-  prisma.userDevice.create({
-    data: {
-      userId,
-      broswer: device.browser || "Unknown",
-      os: device.os || "Unknown",
-      ip: device.ip || null,
-    },
-  });
-
-export const softDeleteUser = async (id: number, requestingUserId: number) => {
-  if (requestingUserId !== id)
-    throw new Error("Unauthorized: You can only delete your own account");
-
-  const user = await prisma.user.findUnique({ where: { id } });
-
-  if (!user || user.isDeleted) return null;
-
-  return prisma.user.update({ where: { id }, data: { isDeleted: true } });
-};
-
-export const refreshTokens = async (token: string) => {
-  // 1. Verify JWT signature before touching the DB
-  let payload: { userId: string; role?: string };
-  try {
-    payload = verifyRefreshToken(token);
-  } catch {
-    throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
-  }
-
-  const userId = Number(payload.userId);
-
-  // 2. Atomic consume-and-reissue — prevents concurrent reuse of the same token
-  const tokens = await prisma.$transaction(async (tx) => {
-    const user = await tx.user.findUnique({ where: { id: userId } });
-
-    if (!user || user.isDeleted)
-      throw Object.assign(new Error("Account not found"), { status: 401 });
-
-    if (!user.isActive)
-      throw Object.assign(
-        new Error("Your account has been deactivated. Please contact support."),
-        { status: 403 },
-      );
-
-    if (!user.refreshTokenHash || !user.refreshTokenExpiresAt)
-      throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
-
-    // 3. Check expiry before the bcrypt work
-    if (user.refreshTokenExpiresAt <= new Date())
-      throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
-
-    // 4. Validate the presented token against the stored hash
-    const isTokenValid = await bcrypt.compare(token, user.refreshTokenHash);
-    if (!isTokenValid)
-      throw Object.assign(new Error("Invalid or expired refresh token"), { status: 401 });
-
-    // 5. Generate replacement token pair
-    const newTokens = signTokenPair({
+    const { accessToken, refreshToken } = signTokenPair({
       userId: String(user.id),
       name: user.name,
       email: user.email,
       role: "user",
     });
 
-    const refreshTokenExpiresAt = getTokenExpiryDate(newTokens.refreshToken);
-    if (!refreshTokenExpiresAt)
-      throw Object.assign(new Error("Failed to derive refresh token expiry"), { status: 500 });
+    const refreshTokenExpiresAt = getTokenExpiryDate(refreshToken);
+    if (!refreshTokenExpiresAt) {
+      throw { status: 500, message: "Failed to derive refresh token expiry" };
+    }
 
-    // 6. Atomically overwrite — old token is now dead
-    await tx.user.update({
+    await prisma.user.update({
       where: { id: user.id },
       data: {
-        refreshTokenHash: await bcrypt.hash(newTokens.refreshToken, 10),
+        refreshTokenHash: await bcrypt.hash(refreshToken, 10),
         refreshTokenExpiresAt,
       },
     });
 
-    return newTokens;
-  });
+    return { ...toLoginResponse(user, accessToken), refreshToken };
+  }
 
-  return tokens;
-};
+  async saveLoginDevice(userId: number, device: { browser: string; os: string; ip?: string }) {
+    return prisma.userDevice.create({
+      data: {
+        userId,
+        broswer: device.browser || "Unknown",
+        os: device.os || "Unknown",
+        ip: device.ip || null,
+      },
+    });
+  }
 
-export const logoutUser = async (userId: number) => {
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      refreshTokenHash: null,
-      refreshTokenExpiresAt: null,
-    },
-  });
-};
+  async refreshTokens(token: string) {
+    let payload: { userId: string; role?: string };
+
+    try {
+      payload = verifyRefreshToken(token);
+    } catch {
+      throw { status: 401, message: "Invalid or expired refresh token" };
+    }
+
+    const userId = Number(payload.userId);
+
+    return prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({ where: { id: userId } });
+
+      if (!user || user.isDeleted) {
+        throw { status: 401, message: "Account not found" };
+      }
+      if (!user.isActive) {
+        throw { status: 403, message: "Your account has been deactivated. Please contact support." };
+      }
+      if (!user.refreshTokenHash || !user.refreshTokenExpiresAt) {
+        throw { status: 401, message: "Invalid or expired refresh token" };
+      }
+      if (user.refreshTokenExpiresAt <= new Date()) {
+        throw { status: 401, message: "Invalid or expired refresh token" };
+      }
+
+      const isTokenValid = await bcrypt.compare(token, user.refreshTokenHash);
+      if (!isTokenValid) {
+        throw { status: 401, message: "Invalid or expired refresh token" };
+      }
+
+      const newTokens = signTokenPair({
+        userId: String(user.id),
+        name: user.name,
+        email: user.email,
+        role: "user",
+      });
+
+      const refreshTokenExpiresAt = getTokenExpiryDate(newTokens.refreshToken);
+      if (!refreshTokenExpiresAt) {
+        throw { status: 500, message: "Failed to derive refresh token expiry" };
+      }
+
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          refreshTokenHash: await bcrypt.hash(newTokens.refreshToken, 10),
+          refreshTokenExpiresAt,
+        },
+      });
+
+      return newTokens;
+    });
+  }
+
+  // ─── Protected ────────────────────────────────────────────────────────────
+
+  async softDeleteUser(id: number, requestingUserId: number) {
+    if (requestingUserId !== id) {
+      throw { status: 403, message: "Unauthorized: You can only delete your own account" };
+    }
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user || user.isDeleted) return null;
+
+    return prisma.user.update({ where: { id }, data: { isDeleted: true } });
+  }
+
+  async logoutUser(userId: number) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        refreshTokenHash: null,
+        refreshTokenExpiresAt: null,
+      },
+    });
+  }
+}
+
+export default new UserService();

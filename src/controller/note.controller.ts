@@ -1,170 +1,169 @@
-import { Request, response, Response } from "express";
-import * as NoteService from "../service/note.service";
+import { Request, Response, NextFunction } from "express";
+import NoteService from "../service/note.service";
 import { CreateNoteDto, UpdateNoteDto } from "../dto/note.dto";
 
-type AuthenticatedRequest = Request & { userId?: number };
+class NoteController {
+  // ─── Helper ────────────────────────────────────────────────────────────────
 
-export const createNote = async (req: Request, res: Response) => {
-  try {
-    const userId =
-      (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
-    if (!userId || isNaN(userId)) {
-      return res.status(401).json({ message: "Unauthorized" });
+  private parseId(raw: string | string[]): number {
+    return Number(Array.isArray(raw) ? raw[0] : raw);
+  }
+
+  // ─── CRUD ──────────────────────────────────────────────────────────────────
+
+  createNote = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id;
+      const dto: CreateNoteDto = {
+        title: req.body.title,
+        body: req.body.body,
+        isFavorite: req.body.isFavorite,
+      };
+      const note = await NoteService.createNote(userId, dto);
+      res.status(201).json(note);
+    } catch (err) {
+      next(err);
     }
-    const dto: CreateNoteDto = { title: req.body.title, body: req.body.body, isFavorite: req.body.isFavorite };
-    const note = await NoteService.createNote(userId, dto);
-    res.status(201).json(note);
-  } catch (err: any) {
-    res.status(err.status ?? 500).json({
-      message: err.message ?? "Internal Server Error",
-    });
-  }
-};
+  };
 
-export const getNotesByOneUser = async (req: Request, res: Response) => {
-  try {
-    const userId =
-      (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
-    if (isNaN(userId)) return res.status(400).json({ message: "Invalid ID" });
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+  getNotesByOneUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const userId = req.user!.id;
+      const page = Math.max(
+        1,
+        parseInt(String(req.query.page ?? "1"), 10) || 1,
+      );
+      const limit = Math.min(
+        100,
+        Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10),
+      );
 
-    const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
-    const limit = Math.min(
-      100,
-      Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10),
-    );
-    
-    const result = await NoteService.getAllNoteOfUser(userId, page, limit);
-    res.status(200).json(result);
+      const result = await NoteService.getAllNoteOfUser(userId, page, limit);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
 
-    // const notes = await NoteService.getAllNoteOfUser(userId);
-    // res.status(200).json(notes);
-  } catch (err: any) {
-    res.status(err.status ?? 500).json({
-      message: err.message ?? "Internal Server Error",
-    });
-  }
-};
+  getNoteById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id;
+      const id = this.parseId(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-export const getNoteById = async (req: Request, res: Response) => {
-  try {
-    const userId =
-      (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const note = await NoteService.getNoteById(id, userId);
+      res.status(200).json(note);
+    } catch (err) {
+      next(err);
+    }
+  };
 
-    const note = await NoteService.getNoteById(id, userId);
-    res.status(200).json(note);
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+  updateNote = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id;
+      const id = this.parseId(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-export const updateNote = async (req: Request, res: Response) => {
-  try {
-    const userId =
-      (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const dto: UpdateNoteDto = {
+        title: req.body.title,
+        body: req.body.body,
+      };
+      const note = await NoteService.updateNote(id, userId, dto);
+      res.status(200).json(note);
+    } catch (err) {
+      next(err);
+    }
+  };
 
-    const dto: UpdateNoteDto = { title: req.body.title, body: req.body.body };
-    const note = await NoteService.updateNote(id, userId, dto);
-    res.status(200).json(note);
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+  deleteNote = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id;
+      const id = this.parseId(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-export const deleteNote = async (req: Request, res: Response) => {
-  try {
-    const userId =
-      (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      await NoteService.softDeleteNote(id, userId);
+      res.status(200).json({ message: "Note deleted" });
+    } catch (err) {
+      next(err);
+    }
+  };
 
-    await NoteService.softDeleteNote(id, userId);
-    res.status(200).json({ message: "Note deleted" });
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+  toggleNoteFavorite = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const userId = req.user!.id;
+      const id = this.parseId(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-export const toggleNoteFavorite = async (req: Request, res: Response) => {
-  try {
-    const userId =
-      (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const note = await NoteService.toggleNoteFavorite(id, userId);
+      res.status(200).json(note);
+    } catch (err) {
+      next(err);
+    }
+  };
 
+  // ─── Share ─────────────────────────────────────────────────────────────────
 
-    const note = await NoteService.toggleNoteFavorite(id, userId);
-    res.status(200).json(note);
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+  shareNoteHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const userId = req.user!.id;
+      const id = this.parseId(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-export const shareNoteHandler = async (req: Request, res: Response) => {
-  try {
-    const userId =
-      (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const result = await NoteService.shareNote(id, userId);
+      res.status(200).json({
+        shareUrl: `${process.env.BASE_URL}/notes/shared/${result.shareToken}`,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 
-    const result = await NoteService.shareNote(id, userId);
-    res.status(200).json({
-      shareUrl: `${process.env.BASE_URL}/notes/shared/${result.shareToken}`,
-    });
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+  // ─── Public — no auth needed, token proves access ──────────────────────────
 
-export const getNoteByTokenHandler = async (
-  req: Request<{ token: string }>,  // 👈 type the params
-  res: Response
-) => {
-  try {
-    const { token } = req.params;
-    const note = await NoteService.getNoteByShareToken(token);
-    res.status(200).json(note);
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+  getNoteByTokenHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const token = Array.isArray(req.params.token)
+        ? req.params.token[0]
+        : req.params.token;
+      const note = await NoteService.getNoteByShareToken(token);
+      res.status(200).json(note);
+    } catch (err) {
+      next(err);
+    }
+  };
 
-export const deleteNoteByTokenHandler = async (
-  req: Request<{ id: string }>,
-  res: Response
-) => {
-  try {
-    const userId = (req as AuthenticatedRequest).userId ?? Number(req.body?.userId);
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+  deleteNoteByTokenHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const userId = req.user!.id;
+      const id = this.parseId(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-    const note = await NoteService.deleteNoteByShareToken(id, userId);
-    res.status(200).json({message: "Note share deleted"});
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+      await NoteService.deleteNoteByShareToken(id, userId);
+      res.status(200).json({ message: "Note share deleted" });
+    } catch (err) {
+      next(err);
+    }
+  };
+}
+
+export default new NoteController();

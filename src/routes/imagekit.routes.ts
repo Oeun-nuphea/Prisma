@@ -1,12 +1,6 @@
 import { Router } from "express";
 import { authHandler } from "../middlewares/auth-handler.middleware";
-import {
-  uploadSingle,
-  uploadMultiple,
-  uploadAvatar,
-  uploadNoteImages,
-  removeImage,
-} from "../controller/imagekit.controller";
+import ImageKitController from "../controller/imagekit.controller"; // ✅ default import
 
 const router = Router();
 
@@ -51,7 +45,7 @@ const router = Router();
  *       400:
  *         description: No file uploaded
  */
-router.post("/avatar", authHandler, uploadSingle, uploadAvatar);
+router.post("/avatar", authHandler, ImageKitController.uploadSingle, ImageKitController.uploadAvatar);
 
 /**
  * @swagger
@@ -94,7 +88,7 @@ router.post("/avatar", authHandler, uploadSingle, uploadAvatar);
  *       400:
  *         description: No files uploaded
  */
-router.post("/notes", authHandler, uploadMultiple, uploadNoteImages);
+router.post("/notes", authHandler, ImageKitController.uploadMultiple, ImageKitController.uploadNoteImages);
 
 /**
  * @swagger
@@ -117,6 +111,6 @@ router.post("/notes", authHandler, uploadMultiple, uploadNoteImages);
  *       400:
  *         description: fileId is required
  */
-router.delete("/:fileId", authHandler, removeImage);
+router.delete("/:fileId", authHandler, ImageKitController.removeImage);
 
 export default router;

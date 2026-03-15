@@ -1,160 +1,124 @@
-import { Request, Response } from "express";
-import * as AdminService from "../service/admin.service";
+import { Request, Response, NextFunction } from "express";
+import AdminService from "../service/admin.service";
 import { LoginAdminDto } from "../dto/admin.dto";
 
-/**
- * POST /admin/login
- * Authenticate admin with email + password + privateKey
- */
-export const loginAdmin = async (req: Request, res: Response) => {
-  try {
-    const dto: LoginAdminDto = req.body;
-    const result = await AdminService.loginAdmin(dto);
+class AdminController {
+  // ─── Auth ──────────────────────────────────────────────────────────────────
 
-    const { refreshToken, ...safeResult } = result; // strip refreshToken out
+  loginAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dto: LoginAdminDto = req.body;
+      const { refreshToken, ...safeResult } = await AdminService.loginAdmin(dto);
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
-    res.status(200).json(safeResult); // ✅ only accessToken + admin data
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+      res.status(200).json(safeResult);
+    } catch (err) {
+      next(err);
+    }
+  };
 
-/**
- * POST /admin/refresh
- * Rotate refresh token and issue a new access token (admin only)
- */
-export const refreshToken = async (req: Request, res: Response) => {
-  try {
-    const token = req.cookies?.refreshToken as string | undefined;
-    if (!token)
-      return res.status(401).json({ message: "No refresh token provided" });
+  refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const token = req.cookies?.refreshToken as string | undefined;
+      if (!token) return res.status(401).json({ message: "No refresh token provided" });
 
-    const { accessToken, refreshToken: newRefreshToken } =
-      await AdminService.refreshTokens(token);
+      const { accessToken, refreshToken: newRefreshToken } =
+        await AdminService.refreshTokens(token);
 
-    // Overwrite the cookie immediately — old value is gone from the DB already
-    res.cookie("refreshToken", newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+      res.cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
-    return res.status(200).json({ accessToken });
-  } catch (err: any) {
-    // If the token was invalid/replayed, clear the stale cookie
-    if (err.status === 401) {
+      res.status(200).json({ accessToken });
+    } catch (err: any) {
+      if (err.status === 401) {
+        res.clearCookie("refreshToken", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+        });
+      }
+      next(err);
+    }
+  };
+
+  logout = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await AdminService.logoutAdmin(req.user!.id); // ✅ from JWT
+
       res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
       });
+
+      res.status(200).json({ message: "Logged out successfully" });
+    } catch (err) {
+      next(err);
     }
-    return res.status(err.status ?? 500).json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+  };
 
-/**
- * GET /admin/users
- * Get all users (admin only)
- */
-export const getUsers = async (req: Request, res: Response) => {
-  try {
-    const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
-    const limit = Math.min(
-      100,
-      Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10),
-    );
-    const includeDeleted = req.query.includeDeleted === "true";
-    const filters = {
-      name: req.query.name ? String(req.query.name) : undefined,
-      email: req.query.email ? String(req.query.email) : undefined,
-    };
-    const result = await AdminService.getAllUsers(
-      page,
-      limit,
-      includeDeleted,
-      filters,
-    );
-    res.status(200).json(result);
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+  // ─── User Management ───────────────────────────────────────────────────────
 
-/**
- * GET /admin/users/:id
- * Get user by ID (admin only)
- */
-export const getUserById = async (req: Request, res: Response) => {
-  try {
-    const id = parseInt(String(req.params.id), 10);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+  getUsers = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10));
+      const includeDeleted = req.query.includeDeleted === "true";
+      const filters = {
+        name: req.query.name ? String(req.query.name) : undefined,
+        email: req.query.email ? String(req.query.email) : undefined,
+      };
 
-    const includeDeleted = req.query.includeDeleted === "true";
+      const result = await AdminService.getAllUsers(page, limit, includeDeleted, filters);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
 
-    const user = await AdminService.getUserById(id, includeDeleted);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.status(200).json(user);
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+  getUserById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = parseInt(String(req.params.id), 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-/**
- * PATCH /admin/users/:id/active
- * Activate or deactivate a user account (admin only)
- */
-export const toggleUserActive = async (req: Request, res: Response) => {
-  try {
-    const id = parseInt(String(req.params.id), 10);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+      const includeDeleted = req.query.includeDeleted === "true";
 
-    const user = await AdminService.toggleUserActive(id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+      const user = await AdminService.getUserById(id, includeDeleted);
+      if (!user) return res.status(404).json({ message: "User not found" });
 
-    const statusMessage = user.isActive
-      ? "User account has been activated."
-      : "User account has been deactivated.";
+      res.status(200).json(user);
+    } catch (err) {
+      next(err);
+    }
+  };
 
-    res.status(200).json({ message: statusMessage, user });
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
-};
+  toggleUserActive = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = parseInt(String(req.params.id), 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-export const logout = async (req: Request, res: Response) => {
-  try {
-    const adminId = (req as Request & { adminId?: number }).adminId ?? Number(req.body?.adminId);
-    if (!adminId) return res.status(401).json({ message: "Unauthorized" });
+      const user = await AdminService.toggleUserActive(id);
+      if (!user) return res.status(404).json({ message: "User not found" });
 
-    await AdminService.logoutAdmin(adminId);
+      const statusMessage = user.isActive
+        ? "User account has been activated."
+        : "User account has been deactivated.";
 
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
-
-    res.status(200).json({ message: "Logged out successfully" });
-  } catch (err: any) {
-    res
-      .status(err.status ?? 500)
-      .json({ message: err.message ?? "Internal Server Error" });
-  }
+      res.status(200).json({ message: statusMessage, user });
+    } catch (err) {
+      next(err);
+    }
+  };
 }
+
+export default new AdminController();

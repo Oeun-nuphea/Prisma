@@ -1,5 +1,5 @@
 import { Router } from "express";
-import * as AdminController from "../controller/admin.controller";
+import AdminController from "../controller/admin.controller";
 import { validate } from "../middlewares/validate";
 import { LoginAdminSchema } from "../schemas/admin.schema";
 import { adminHandler } from "../middlewares/role.middleware";

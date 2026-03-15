@@ -2,20 +2,21 @@ import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken } from "../config/jwt";
 import { prisma } from "../config/db";
 
-type AuthenticatedRequest = Request & { userId?: number };
+// ✅ Declare once here — available across the entire project
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { id: number; role: string };
+    }
+  }
+}
 
-export const authHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+export const authHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res
-        .status(401)
-        .json({ message: "Missing or invalid authorization header" });
+      return res.status(401).json({ message: "Missing or invalid authorization header" });
     }
 
     const token = authHeader.split(" ")[1];
@@ -30,22 +31,20 @@ export const authHandler = async (
       return res.status(401).json({ message: "Invalid token payload" });
     }
 
-    // Check the user still exists and is active
     const user = await prisma.user.findUnique({ where: { id: userId } });
+
     if (!user || user.isDeleted) {
       return res.status(401).json({ message: "Account not found" });
     }
     if (!user.isActive) {
-      return res.status(403).json({
-        message: "Your account has been deactivated. Please contact support.",
-      });
+      return res.status(403).json({ message: "Your account has been deactivated. Please contact support." });
     }
 
-    (req as AuthenticatedRequest).userId = userId;
-    if (!req.body || typeof req.body !== "object") req.body = {};
-    req.body.userId = userId;
+    // ✅ Attach to req.user — never to req.body
+    req.user = { id: userId, role: user.role };
+
     return next();
-  } catch (_error) {
+  } catch {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };

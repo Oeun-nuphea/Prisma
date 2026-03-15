@@ -1,5 +1,5 @@
 import { Router } from "express";
-import * as NoteController from "../controller/note.controller";
+import NoteController from "../controller/note.controller";
 import { authHandler } from "../middlewares/auth-handler.middleware";
 import { validate } from "../middlewares/validate";
 import { CreateNoteSchema, UpdateNoteSchema } from "../schemas/note.schema";
