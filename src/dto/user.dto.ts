@@ -28,6 +28,8 @@ export interface UserResponseDto {
   name: string;
   email: string;
   avatarUrl: string | null;
+  isActive: boolean;
+  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

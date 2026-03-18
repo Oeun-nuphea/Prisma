@@ -19,6 +19,8 @@ export const toUserResponse = (user: User): UserResponseDto => ({
   avatarUrl: user.avatarUrl
     ? `${process.env.IMAGEKIT_URL_ENDPOINT}${user.avatarUrl}`
     : null,
+  isActive: user.isActive,
+  isDeleted: user.isDeleted,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });

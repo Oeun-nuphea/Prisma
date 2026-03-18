@@ -8,3 +8,4 @@ node_modules
 # Local SQLite files
 /dev.db
 /prisma/dev.db
+/metric.md

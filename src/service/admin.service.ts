@@ -114,10 +114,14 @@ class AdminService {
   async getAllUsers(
     page: number = 1,
     limit: number = 10,
+    isActive: boolean = true,
     includeDeleted: boolean = false,
     filters: { name?: string; email?: string } = {},
   ) {
     const where: Record<string, any> = includeDeleted ? {} : { isDeleted: false };
+    if (isActive !== undefined) {
+      where.isActive = isActive;
+    }
 
     if (filters.name) {
       where.name = { contains: filters.name, mode: "insensitive" };
@@ -128,7 +132,7 @@ class AdminService {
 
     const [users, meta] = await prisma.user
       .paginate({ where })
-      .withPages({ page, limit, includePageCount: true });
+      .withPages({ page, limit, isActive, includePageCount: true });
 
     return { data: users.map(toUserResponse), meta };
   }

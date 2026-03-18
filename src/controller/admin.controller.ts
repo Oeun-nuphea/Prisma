@@ -73,13 +73,14 @@ class AdminController {
     try {
       const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
       const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10));
+      const isActive = req.query.isActive === "true";
       const includeDeleted = req.query.includeDeleted === "true";
       const filters = {
         name: req.query.name ? String(req.query.name) : undefined,
         email: req.query.email ? String(req.query.email) : undefined,
       };
 
-      const result = await AdminService.getAllUsers(page, limit, includeDeleted, filters);
+      const result = await AdminService.getAllUsers(page, limit, isActive, includeDeleted, filters);
       res.status(200).json(result);
     } catch (err) {
       next(err);

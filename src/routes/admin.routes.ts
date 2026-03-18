@@ -94,6 +94,14 @@ router.post("/refresh", csrfGuard, AdminController.refreshToken);
  *         schema:
  *           type: string
  *         description: Filter by email (partial, case-insensitive)
+ * 
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *            type: boolean
+ *            default: true
+ *         description: Filter by active
+ * 
  *       - in: query
  *         name: includeDeleted
  *         schema:
