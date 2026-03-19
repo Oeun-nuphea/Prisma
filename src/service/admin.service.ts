@@ -1,7 +1,16 @@
 import { prisma } from "../config/db";
-import { getTokenExpiryDate, signTokenPair, verifyRefreshToken } from "../config/jwt";
+import {
+  getTokenExpiryDate,
+  signTokenPair,
+  verifyRefreshToken,
+} from "../config/jwt";
 import { LoginAdminDto } from "../dto/admin.dto";
-import { toAdminLoginResponse, toUserResponse, toUserResponseWithStatus } from "../utils/mapper";
+import {
+  toAdminLoginResponse,
+  toUserDeviceResponse,
+  toUserResponse,
+  toUserResponseWithStatus,
+} from "../utils/mapper";
 import bcrypt from "bcryptjs";
 
 class AdminService {
@@ -13,11 +22,14 @@ class AdminService {
       throw { status: 403, message: "Invalid credentials" };
     }
 
-    const admin = await prisma.admin.findUnique({ where: { email, isDeleted: false } });
+    const admin = await prisma.admin.findUnique({
+      where: { email, isDeleted: false },
+    });
     if (!admin) throw { status: 401, message: "Invalid email or password" };
 
     const isPasswordValid = await bcrypt.compare(password, admin.password);
-    if (!isPasswordValid) throw { status: 401, message: "Invalid email or password" };
+    if (!isPasswordValid)
+      throw { status: 401, message: "Invalid email or password" };
 
     const { accessToken, refreshToken } = signTokenPair({
       userId: String(admin.id),
@@ -118,7 +130,9 @@ class AdminService {
     includeDeleted: boolean = false,
     filters: { name?: string; email?: string } = {},
   ) {
-    const where: Record<string, any> = includeDeleted ? {} : { isDeleted: false };
+    const where: Record<string, any> = includeDeleted
+      ? {}
+      : { isDeleted: false };
     if (isActive !== undefined) {
       where.isActive = isActive;
     }
@@ -137,16 +151,44 @@ class AdminService {
     return { data: users.map(toUserResponse), meta };
   }
 
-  async getAllUserDevice(page: number = 1, limit: number = 10, includeDeleted: boolean = false) {
-    const where: Record<string, any> = includeDeleted ? {} : { isDeleted: false };
+  async getAllUserDevice(
+    page: number = 1,
+    limit: number = 10,
+    includeDeleted: boolean = false,
+  ) {
+    const where: Record<string, any> = includeDeleted
+      ? {}
+      : { isDeleted: false };
 
     const [devices, meta] = await prisma.userDevice
-      .paginate({ where })
+      .paginate({
+        where,
+        select: {
+          id: true,
+          userId: true,
+          broswer: true,
+          os: true,
+          ip: true,
+          isDeleted: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+              isActive: true,
+              isDeleted: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+        },
+      })
       .withPages({ page, limit, includePageCount: true });
 
-    return { data: devices, meta };
+    return { data: devices.map(toUserDeviceResponse), meta };
   }
-
 
   async getUserById(id: number, includeDeleted: boolean = false) {
     const user = await prisma.user.findUnique({
@@ -170,8 +212,6 @@ class AdminService {
     });
     return toUserResponseWithStatus(updated);
   }
-
-    
 }
 
 export default new AdminService();

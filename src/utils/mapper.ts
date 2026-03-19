@@ -1,18 +1,31 @@
-import { User, Note, Admin } from "@prisma/client";
+import { User, Note, Admin, UserDevice } from "@prisma/client";
 import {
   UserResponseDto,
   LoginResponseDto,
   UserResponseWithStatusDto,
+  UserDeviceResponseDto,
 } from "../dto/user.dto";
 import { AdminResponseDto, LoginAdminResponseDto } from "../dto/admin.dto";
 import { NoteResponseDto, Block } from "../dto/note.dto";
+
+type PublicUserRecord = Pick<
+  User,
+  | "id"
+  | "name"
+  | "email"
+  | "avatarUrl"
+  | "isActive"
+  | "isDeleted"
+  | "createdAt"
+  | "updatedAt"
+>;
 
 // ─── User Mappers ─────────────────────────────────────────────────────────────
 
 /**
  * Strips sensitive fields (password, isDeleted, timestamps) from a User record.
  */
-export const toUserResponse = (user: User): UserResponseDto => ({
+export const toUserResponse = (user: PublicUserRecord): UserResponseDto => ({
   id: user.id,
   name: user.name,
   email: user.email,
@@ -49,6 +62,24 @@ export const toUserResponseWithStatus = (
   avatarUrl: user.avatarUrl
     ? `${process.env.IMAGEKIT_URL_ENDPOINT}${user.avatarUrl}`
     : null,
+});
+
+export const toUserDeviceResponse = (
+  device: Pick<
+    UserDevice,
+    "id" | "userId" | "broswer" | "os" | "ip" | "isDeleted" | "createdAt"
+  > & {
+    user: PublicUserRecord;
+  },
+): UserDeviceResponseDto => ({
+  id: device.id,
+  userId: device.userId,
+  broswer: device.broswer,
+  os: device.os,
+  ip: device.ip,
+  isDeleted: device.isDeleted,
+  createdAt: device.createdAt,
+  user: toUserResponse(device.user),
 });
 
 /**
@@ -107,4 +138,3 @@ export const toNoteResponse = (note: Note): NoteResponseDto => {
 
 export const toNoteListResponse = (notes: Note[]): NoteResponseDto[] =>
   notes.map(toNoteResponse);
-

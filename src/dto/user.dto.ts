@@ -52,7 +52,8 @@ export interface UserDeviceResponseDto {
   userId: number;
   broswer: string;
   os: string;
-  ip: string;
+  ip: string | null;
   isDeleted: boolean;
   createdAt: Date;
+  user: UserResponseDto;
 }
