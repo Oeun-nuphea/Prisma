@@ -63,4 +63,18 @@ model Admin {
   private               String
   refreshTokenExpiresAt DateTime?
   refreshTokenHash      String?
+
+  pushSubscriptions     AdminPushSubscription[]
+}
+
+model AdminPushSubscription {
+  id        Int      @id @default(autoincrement())
+  adminId   Int
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
