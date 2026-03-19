@@ -1,30 +1,24 @@
 import { Request, Response, NextFunction } from "express";
-import pushService, { PushPayload } from "../service/push.service";
+import {
+  SendPushBodyDto,
+  SubscribeAdminPushDto,
+  UnsubscribePushDto,
+} from "../dto/push.dto";
+import pushService from "../service/push.service";
+import { AdminRequest } from "../middlewares/role.middleware";
 
 class PushController {
-  async subscribeAdmin(req: Request, res: Response, next: NextFunction) {
+  subscribeAdmin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const adminId = req.admin?.id ?? req.body.adminId;
-      const subscription = req.body;
+      const adminId = (req as AdminRequest).adminId;
+      const subscription: SubscribeAdminPushDto = req.body;
 
       if (!adminId) {
-        return res.status(400).json({
-          message: "adminId is required",
-        });
-      }
-
-      if (
-        !subscription?.endpoint ||
-        !subscription?.keys?.p256dh ||
-        !subscription?.keys?.auth
-      ) {
-        return res.status(400).json({
-          message: "Invalid push subscription payload",
-        });
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       const saved = await pushService.saveAdminPushSubscription(
-        Number(adminId),
+        adminId,
         subscription
       );
 
@@ -35,17 +29,11 @@ class PushController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 
-  async unsubscribeAdmin(req: Request, res: Response, next: NextFunction) {
+  unsubscribeAdmin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { endpoint } = req.body;
-
-      if (!endpoint) {
-        return res.status(400).json({
-          message: "endpoint is required",
-        });
-      }
+      const { endpoint }: UnsubscribePushDto = req.body;
 
       await pushService.deletePushSubscription(endpoint);
 
@@ -55,26 +43,20 @@ class PushController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 
-  async sendToAdmin(req: Request, res: Response, next: NextFunction) {
+  sendToAdmin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const adminId = req.params.adminId || req.body.adminId;
-      const payload = req.body.payload as PushPayload;
+      const adminId = Number(req.params.adminId);
+      const { payload }: SendPushBodyDto = req.body;
 
-      if (!adminId) {
+      if (isNaN(adminId) || adminId <= 0) {
         return res.status(400).json({
-          message: "adminId is required",
+          message: "Invalid adminId",
         });
       }
 
-      if (!payload?.title || !payload?.body) {
-        return res.status(400).json({
-          message: "payload.title and payload.body are required",
-        });
-      }
-
-      const result = await pushService.sendPushToAdmin(Number(adminId), payload);
+      const result = await pushService.sendPushToAdmin(adminId, payload);
 
       return res.status(200).json({
         message: "Push notification sent",
@@ -83,7 +65,7 @@ class PushController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 }
 
 export default new PushController();

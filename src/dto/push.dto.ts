@@ -1,6 +1,4 @@
-// ─── Subscribe ─────────────────────────────────────────────
-
-export interface SubscribePushDto {
+export interface SubscribeAdminPushDto {
   endpoint: string;
   keys: {
     p256dh: string;
@@ -24,12 +22,6 @@ export interface PushPayloadDto {
   meta?: Record<string, unknown>;
 }
 
-// ─── Send Push ─────────────────────────────────────────────
-
-export interface SendPushDto {
-  title: string;
-  body: string;
-  url?: string;
-  type?: string;
-  meta?: Record<string, unknown>;
+export interface SendPushBodyDto {
+  payload: PushPayloadDto;
 }

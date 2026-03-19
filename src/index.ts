@@ -18,6 +18,7 @@ import user from "./routes/user.routes";
 import note from "./routes/note.routes";
 import admin from "./routes/admin.routes";
 import upload from "./routes/imagekit.routes";
+import push from "./routes/push.routes";
 
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -159,7 +160,8 @@ app.use(
 app.use("/users", user);
 app.use("/notes", note);
 app.use("/admin", admin);
-app.use("/upload", upload)
+app.use("/upload", upload);
+app.use("/push", push);
 
 
 // ─── Global Error Handler (MUST be last) ──────────────────────────────────────
