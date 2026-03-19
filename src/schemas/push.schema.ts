@@ -24,7 +24,19 @@ export const SendPushSchema = z.object({
   payload: PushPayloadSchema,
 });
 
+export const GetAdminNotificationsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(100000).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  unreadOnly: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional(),
+});
+
 export type PushSubscriptionInput = z.infer<typeof PushSubscriptionSchema>;
 export type UnsubscribePushInput = z.infer<typeof UnsubscribePushSchema>;
 export type PushPayloadInput = z.infer<typeof PushPayloadSchema>;
 export type SendPushInput = z.infer<typeof SendPushSchema>;
+export type GetAdminNotificationsQueryInput = z.infer<
+  typeof GetAdminNotificationsQuerySchema
+>;

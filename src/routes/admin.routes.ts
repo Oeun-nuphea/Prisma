@@ -120,6 +120,41 @@ router.get("/users", adminHandler, AdminController.getUsers);
 
 /**
  * @swagger
+ * /admin/users/devices:
+ *   get:
+ *     summary: Get all user devices (admin only)
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Items per page (max 100)
+ *       - in: query
+ *         name: includeDeleted
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Include soft-deleted user devices (true/false)
+ *     responses:
+ *       200:
+ *         description: Paginated list of user devices
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden — not an admin
+ */
+router.get("/users/devices", adminHandler, AdminController.getUserDevices);
+
+/**
+ * @swagger
  * /admin/users/{id}:
  *   get:
  *     summary: Get a single user by ID (admin only)

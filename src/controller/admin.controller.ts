@@ -87,6 +87,19 @@ class AdminController {
     }
   };
 
+  getUserDevices = async(req: Request, res: Response, next: NextFunction) => {
+    try {
+      const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1); 
+      const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? "10"), 10) || 10));
+      const includeDeleted = req.query.includeDeleted === "true";
+
+      const result = await AdminService.getAllUserDevice(page, limit, includeDeleted);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   getUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = parseInt(String(req.params.id), 10);

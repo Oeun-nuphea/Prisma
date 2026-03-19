@@ -46,3 +46,13 @@ export interface UserResponseWithStatusDto {
   avatarUrl: string | null;
   isActive: boolean;
 }
+
+export interface UserDeviceResponseDto {
+  id: number;
+  userId: number;
+  broswer: string;
+  os: string;
+  ip: string;
+  isDeleted: boolean;
+  createdAt: Date;
+}

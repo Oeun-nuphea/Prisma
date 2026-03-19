@@ -65,6 +65,7 @@ model Admin {
   refreshTokenHash      String?
 
   pushSubscriptions     AdminPushSubscription[]
+  notifications         AdminNotification[]
 }
 
 model AdminPushSubscription {
@@ -75,6 +76,23 @@ model AdminPushSubscription {
   auth      String
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+}
+
+model AdminNotification {
+  id        Int      @id @default(autoincrement())
+  adminId   Int
+  title     String
+  body      String
+  url       String?
+  type      String?
+  meta      Json?
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }

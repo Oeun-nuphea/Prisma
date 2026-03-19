@@ -137,6 +137,17 @@ class AdminService {
     return { data: users.map(toUserResponse), meta };
   }
 
+  async getAllUserDevice(page: number = 1, limit: number = 10, includeDeleted: boolean = false) {
+    const where: Record<string, any> = includeDeleted ? {} : { isDeleted: false };
+
+    const [devices, meta] = await prisma.userDevice
+      .paginate({ where })
+      .withPages({ page, limit, includePageCount: true });
+
+    return { data: devices, meta };
+  }
+
+
   async getUserById(id: number, includeDeleted: boolean = false) {
     const user = await prisma.user.findUnique({
       where: {
@@ -159,6 +170,8 @@ class AdminService {
     });
     return toUserResponseWithStatus(updated);
   }
+
+    
 }
 
 export default new AdminService();

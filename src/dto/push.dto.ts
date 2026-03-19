@@ -25,3 +25,13 @@ export interface PushPayloadDto {
 export interface SendPushBodyDto {
   payload: PushPayloadDto;
 }
+
+export interface GetAdminNotificationsQueryDto {
+  page?: number;
+  limit?: number;
+  unreadOnly?: boolean;
+}
+
+export interface AdminNotificationParamsDto {
+  notificationId: number;
+}

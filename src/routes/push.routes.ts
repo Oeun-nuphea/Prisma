@@ -4,6 +4,7 @@ import { validate } from "../middlewares/validate";
 import { adminHandler } from "../middlewares/role.middleware";
 import { csrfGuard } from "../middlewares/csrf.middleware";
 import {
+  GetAdminNotificationsQuerySchema,
   PushSubscriptionSchema,
   SendPushSchema,
   UnsubscribePushSchema,
@@ -17,6 +18,114 @@ const router = Router();
  *   name: Push
  *   description: Web push subscription and notification management for admins
  */
+
+/**
+ * @swagger
+ * /push/admin/notifications/me:
+ *   get:
+ *     summary: Get paginated notifications for the current authenticated admin
+ *     tags: [Push]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *       - in: query
+ *         name: unreadOnly
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *     responses:
+ *       200:
+ *         description: Current admin notifications fetched successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden — admin access only
+ */
+router.get(
+  "/admin/notifications/me",
+  adminHandler,
+  validate(GetAdminNotificationsQuerySchema, "query"),
+  PushController.getAdminNotifications,
+);
+
+router.get(
+  "/admin/notifications/me/unread-count",
+  adminHandler,
+  PushController.getUnreadCount,
+);
+
+router.patch(
+  "/admin/notifications/me/read-all",
+  adminHandler,
+  PushController.markAllNotificationsAsRead,
+);
+
+router.patch(
+  "/admin/notifications/me/:notificationId/read",
+  adminHandler,
+  PushController.markNotificationAsRead,
+);
+
+router.delete(
+  "/admin/notifications/me/:notificationId",
+  adminHandler,
+  PushController.deleteNotification,
+);
+
+/**
+ * @swagger
+ * /push/admin/notifications:
+ *   get:
+ *     summary: Get paginated notifications for the authenticated admin
+ *     tags: [Push]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *       - in: query
+ *         name: unreadOnly
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *     responses:
+ *       200:
+ *         description: Admin notifications fetched successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden — admin access only
+ */
+router.get(
+  "/admin/notifications",
+  adminHandler,
+  validate(GetAdminNotificationsQuerySchema, "query"),
+  PushController.getAdminNotifications,
+);
 
 /**
  * @swagger
