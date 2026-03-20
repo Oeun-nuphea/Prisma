@@ -30,7 +30,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    restart: unless-stopped
+    # restart: unless-stopped
     networks:
       - note_network
 
@@ -38,7 +38,7 @@ services:
     image: postgres:16-alpine
     container_name: db-postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
